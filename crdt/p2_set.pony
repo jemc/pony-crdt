@@ -89,8 +89,8 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val] is
   
   fun ref converge(data': (std.HashSet[A, H], std.HashSet[A, H])) =>
     """
-    Converge from the given persistent HashSet into this one.
-    For this convergent replicated data type, the convergence is a simple union.
+    Converge from the given pair of persistent HashSets into this set.
+    For this data type, the convergence is the union of both constituent sets.
     """
     _ins = _ins or data'._1
     _del = _del or data'._2
