@@ -72,7 +72,7 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
     buf.push('%')
     buf.push('{')
     var first = true
-    for value in _data.values() do
+    for value in values() do
       if first then first = false else buf .> push(';').push(' ') end
       iftype A <: Stringable val then
         buf.append(value.string())
