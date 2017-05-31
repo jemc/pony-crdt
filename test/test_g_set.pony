@@ -18,3 +18,5 @@ class TestGSet is UnitTest
     c.>converge(a.data()).>converge(b.data())
     
     h.assert_eq[GSet[String]](a, b)
+    h.assert_eq[GSet[String]](b, c)
+    h.assert_eq[GSet[String]](c, a)
