@@ -75,6 +75,26 @@ class ref LWWHashSet[
     """
     _data.contains(value) and (try _data(value) else return false end)._2
   
+  fun ref _set_no_delta(value: A, timestamp: T) =>
+    try
+      (let current_timestamp, let _) = _data(value)
+      if timestamp < current_timestamp then return end
+      iftype B <: BiasDelete then
+        if (timestamp == current_timestamp) then return end
+      end
+    end
+    _data(value) = (timestamp, true)
+  
+  fun ref _unset_no_delta(value: box->A!, timestamp: T) =>
+    try
+      (let current_timestamp, let _) = _data(value)
+      if timestamp < current_timestamp then return end
+      iftype B <: BiasInsert then
+        if (timestamp == current_timestamp) then return end
+      end
+    end
+    _data(value) = (timestamp, false)
+  
   fun ref clear(
     timestamp: T,
     delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
@@ -92,8 +112,8 @@ class ref LWWHashSet[
     // data type that the memory usage is not grow-only, which is a highly
     // desirable feature that we want to highlight wherever we can.
     for value in _data.keys() do
-      unset(value, timestamp)
-      delta._data_update(value, (timestamp, false))
+      _unset_no_delta(value, timestamp)
+      delta._unset_no_delta(value, timestamp)
     end
     consume delta
   
@@ -105,15 +125,8 @@ class ref LWWHashSet[
     """
     Add a value to the set.
     """
-    delta._data_update(value, (timestamp, true))
-    try
-      (let current_timestamp, let _) = _data(value)
-      if timestamp < current_timestamp then return delta end
-      iftype B <: BiasDelete then
-        if (timestamp == current_timestamp) then return delta end
-      end
-    end
-    _data(value) = (timestamp, true)
+    _set_no_delta(value, timestamp)
+    delta._set_no_delta(value, timestamp)
     consume delta
   
   fun ref unset(
@@ -124,15 +137,8 @@ class ref LWWHashSet[
     """
     Remove a value from the set.
     """
-    delta._data_update(value, (timestamp, false))
-    try
-      (let current_timestamp, let _) = _data(value)
-      if timestamp < current_timestamp then return delta end
-      iftype B <: BiasInsert then
-        if (timestamp == current_timestamp) then return delta end
-      end
-    end
-    _data(value) = (timestamp, false)
+    _unset_no_delta(value, timestamp)
+    delta._unset_no_delta(value, timestamp)
     consume delta
   
   fun ref union(
@@ -143,8 +149,8 @@ class ref LWWHashSet[
     Add everything in the given iterator to the set.
     """
     for (value, timestamp) in that do
-      set(value, timestamp)
-      delta._data_update(value, (timestamp, true))
+      _set_no_delta(value, timestamp)
+      delta._set_no_delta(value, timestamp)
     end
     consume delta
   
@@ -154,7 +160,10 @@ class ref LWWHashSet[
     For this data type, the convergence is the union of both constituent sets.
     """
     for (value, (timestamp, present)) in that._data.pairs() do
-      if present then set(value, timestamp) else unset(value, timestamp) end
+      if present
+      then _set_no_delta(value, timestamp)
+      else _unset_no_delta(value, timestamp)
+      end
     end
   
   fun result(): std.HashSet[A, H] =>
