@@ -1,11 +1,10 @@
-use mut = "collections"
-use std = "collections/persistent"
+use std = "collections"
 
-type P2Set[A: (mut.Hashable val & Equatable[A])] is P2HashSet[A, mut.HashEq[A]]
+type P2Set[A: (std.Hashable val & Equatable[A])] is P2HashSet[A, std.HashEq[A]]
 
-type P2SetIs[A: Any #share] is P2HashSet[A, mut.HashIs[A]]
+type P2SetIs[A: Any #share] is P2HashSet[A, std.HashIs[A]]
 
-class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
+class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
   is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H] box])
   """
   An unordered mutable two-phase set that supports one-time removal.
@@ -20,8 +19,8 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
   Because the set is composed of two grow-only sets that are eventually
   consistent when converged, the overall result is also eventually consistent.
   """
-  var _ins: std.HashSet[A, H]
-  var _del: std.HashSet[A, H]
+  embed _ins: std.HashSet[A, H]
+  embed _del: std.HashSet[A, H]
   
   new ref create() =>
     _ins = std.HashSet[A, H]
@@ -49,19 +48,19 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
     """
     Remove all elements from the set.
     """
-    _del = _del or _ins
+    _del.union(_ins.values())
   
   fun ref set(value: A) =>
     """
     Add a value to the set.
     """
-    _ins = _ins + value
+    _ins.set(value)
   
   fun ref unset(value: box->A!) =>
     """
     Remove a value from the set.
     """
-    _del = _del + value
+    _del.set(value)
   
   fun ref extract(value: box->A!): A^ ? =>
     """
@@ -69,7 +68,7 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
     wasn't in the set.
     """
     if _del.contains(value) then error end
-    _del = _del + value
+    _del.set(value)
     _ins(value)
   
   fun ref union(that: Iterator[A]) =>
@@ -85,8 +84,8 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
     Converge from the given pair of persistent HashSets into this set.
     For this data type, the convergence is the union of both constituent sets.
     """
-    _ins = _ins or that._ins
-    _del = _del or that._del
+    _ins.union(that._ins.values())
+    _del.union(that._del.values())
   
   fun result(): std.HashSet[A, H] =>
     """
