@@ -21,9 +21,9 @@ class TestGSet is UnitTest
     h.assert_ne[GSet[String]](b, c)
     h.assert_ne[GSet[String]](c, a)
     
-    a.>converge(b.data()).>converge(c.data())
-    b.>converge(c.data()).>converge(a.data())
-    c.>converge(a.data()).>converge(b.data())
+    a.>converge(b).>converge(c)
+    b.>converge(c).>converge(a)
+    c.>converge(a).>converge(b)
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)

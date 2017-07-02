@@ -18,9 +18,7 @@ class ref LWWHashSet[
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
   H: mut.HashFunction[A] val]
-  is
-  ( Comparable[LWWHashSet[A, T, B, H]]
-  & Convergent[(std.HashMap[A, T, H], std.HashMap[A, T, H])] )
+  is (Comparable[LWWHashSet[A, T, B, H]] & Convergent[LWWHashSet[A, T, B, H]])
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -127,19 +125,13 @@ class ref LWWHashSet[
       set(consume value, timestamp)
     end
   
-  fun data(): (std.HashMap[A, T, H], std.HashMap[A, T, H]) =>
-    """
-    Return the underlying data, for replicating/converging with other instances.
-    """
-    (_ins, _del)
-  
-  fun ref converge(data': (std.HashMap[A, T, H], std.HashMap[A, T, H])) =>
+  fun ref converge(that: LWWHashSet[A, T, B, H]) =>
     """
     Converge from the given pair of persistent HashMaps into this set.
     For this data type, the convergence is the union of both constituent sets.
     """
-    for (value, timestamp) in data'._1.pairs() do set(value, timestamp) end
-    for (value, timestamp) in data'._2.pairs() do unset(value, timestamp) end
+    for (value, timestamp) in that._ins.pairs() do set(value, timestamp) end
+    for (value, timestamp) in that._del.pairs() do unset(value, timestamp) end
   
   fun result(): std.HashSet[A, H] =>
     """

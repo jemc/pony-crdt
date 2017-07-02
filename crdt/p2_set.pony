@@ -5,9 +5,8 @@ type P2Set[A: (mut.Hashable val & Equatable[A])] is P2HashSet[A, mut.HashEq[A]]
 
 type P2SetIs[A: Any #share] is P2HashSet[A, mut.HashIs[A]]
 
-class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val] is
-  ( Comparable[P2HashSet[A, H]]
-  & Convergent[(std.HashSet[A, H], std.HashSet[A, H])] )
+class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val]
+  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H] box])
   """
   An unordered mutable two-phase set that supports one-time removal.
   That is, once an element has been deleted it may never be inserted again.
@@ -81,19 +80,13 @@ class ref P2HashSet[A: Any #share, H: mut.HashFunction[A] val] is
       set(consume value)
     end
   
-  fun data(): (std.HashSet[A, H], std.HashSet[A, H]) =>
-    """
-    Return the underlying data, for replicating/converging with other instances.
-    """
-    (_ins, _del)
-  
-  fun ref converge(data': (std.HashSet[A, H], std.HashSet[A, H])) =>
+  fun ref converge(that: P2HashSet[A, H] box) =>
     """
     Converge from the given pair of persistent HashSets into this set.
     For this data type, the convergence is the union of both constituent sets.
     """
-    _ins = _ins or data'._1
-    _del = _del or data'._2
+    _ins = _ins or that._ins
+    _del = _del or that._del
   
   fun result(): std.HashSet[A, H] =>
     """

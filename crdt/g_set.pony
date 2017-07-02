@@ -6,7 +6,7 @@ type GSet[A: (mut.Hashable val & Equatable[A])] is GHashSet[A, mut.HashEq[A]]
 type GSetIs[A: Any #share] is GHashSet[A, mut.HashIs[A]]
 
 class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
-  is (Comparable[GHashSet[A, H]] & Convergent[std.HashSet[A, H]])
+  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H] box])
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
   
@@ -19,6 +19,9 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
   
   new ref create() =>
     _data = std.HashSet[A, H]
+  
+  new ref _of(data': std.HashSet[A, H]) =>
+    _data = data'
   
   fun size(): USize =>
     """
@@ -38,38 +41,32 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
     """
     _data.contains(value)
   
-  fun ref set(value: A): std.HashSet[A, H] =>
+  fun ref set(value: A): GHashSet[A, H] =>
     """
     Add a value to the set.
     Returns a delta-state for converging with other instances.
     """
     _data = _data + value
-    std.HashSet[A, H] + value // delta
+    GHashSet[A, H]._of(std.HashSet[A, H] + value) // delta
   
-  fun ref union(that: Iterator[A]): std.HashSet[A, H] =>
+  fun ref union(that: Iterator[A]): GHashSet[A, H] =>
     """
     Add everything in the given iterator to the set.
     Returns a delta-state for converging with other instances.
     """
     var delta = std.HashSet[A, H]
     for value in that do
-      set(value)
+      _data = _data + value
       delta = delta + value
     end
-    delta
+    GHashSet[A, H]._of(delta)
   
-  fun data(): std.HashSet[A, H] =>
+  fun ref converge(that: GHashSet[A, H] box) =>
     """
-    Return the underlying data, for replicating/converging with other instances.
-    """
-    _data
-  
-  fun ref converge(data': std.HashSet[A, H]) =>
-    """
-    Converge from the given persistent HashSet into this one.
+    Converge from the given GHashSet into this one.
     For this convergent replicated data type, the convergence is a simple union.
     """
-    union(data'.values())
+    union(that._data.values())
   
   fun string(): String iso^ =>
     """
@@ -91,10 +88,10 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
     buf.push('}')
     consume buf
   
-  fun eq(that: GHashSet[A, H] box): Bool => _data.eq(that.data())
-  fun ne(that: GHashSet[A, H] box): Bool => _data.ne(that.data())
-  fun lt(that: GHashSet[A, H] box): Bool => _data.lt(that.data())
-  fun le(that: GHashSet[A, H] box): Bool => _data.le(that.data())
-  fun gt(that: GHashSet[A, H] box): Bool => _data.gt(that.data())
-  fun ge(that: GHashSet[A, H] box): Bool => _data.ge(that.data())
+  fun eq(that: GHashSet[A, H] box): Bool => _data.eq(that._data)
+  fun ne(that: GHashSet[A, H] box): Bool => _data.ne(that._data)
+  fun lt(that: GHashSet[A, H] box): Bool => _data.lt(that._data)
+  fun le(that: GHashSet[A, H] box): Bool => _data.le(that._data)
+  fun gt(that: GHashSet[A, H] box): Bool => _data.gt(that._data)
+  fun ge(that: GHashSet[A, H] box): Bool => _data.ge(that._data)
   fun values(): Iterator[A]^ => _data.values()

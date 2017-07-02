@@ -21,9 +21,9 @@ class TestLWWSet is UnitTest
     h.assert_ne[LWWSet[String]](b, c)
     h.assert_ne[LWWSet[String]](c, a)
     
-    a.>converge(b.data()).>converge(c.data())
-    b.>converge(c.data()).>converge(a.data())
-    c.>converge(a.data()).>converge(b.data())
+    a.>converge(b).>converge(c)
+    b.>converge(c).>converge(a)
+    c.>converge(a).>converge(b)
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
@@ -33,8 +33,8 @@ class TestLWWSet is UnitTest
     h.assert_eq[LWWSet[String]](c, a)
     
     c.unset("currant", 6)
-    a.>converge(c.data())
-    b.>converge(c.data())
+    a.>converge(c)
+    b.>converge(c)
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
@@ -45,8 +45,8 @@ class TestLWWSet is UnitTest
     
     c.unset("banana", 4)
     c.unset("apple", 5)
-    a.>converge(c.data())
-    b.>converge(c.data())
+    a.>converge(c)
+    b.>converge(c)
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
@@ -57,8 +57,8 @@ class TestLWWSet is UnitTest
     
     c.unset("banana", 7)
     c.unset("apple", 8)
-    a.>converge(c.data())
-    b.>converge(c.data())
+    a.>converge(c)
+    b.>converge(c)
     
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)

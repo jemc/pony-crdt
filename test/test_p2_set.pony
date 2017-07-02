@@ -21,9 +21,9 @@ class TestP2Set is UnitTest
     h.assert_ne[P2Set[String]](b, c)
     h.assert_ne[P2Set[String]](c, a)
     
-    a.>converge(b.data()).>converge(c.data())
-    b.>converge(c.data()).>converge(a.data())
-    c.>converge(a.data()).>converge(b.data())
+    a.>converge(b).>converge(c)
+    b.>converge(c).>converge(a)
+    c.>converge(a).>converge(b)
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
@@ -33,8 +33,8 @@ class TestP2Set is UnitTest
     h.assert_eq[P2Set[String]](c, a)
     
     c.unset("currant")
-    a.>converge(c.data())
-    b.>converge(c.data())
+    a.>converge(c)
+    b.>converge(c)
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
@@ -45,8 +45,8 @@ class TestP2Set is UnitTest
     
     c.unset("banana")
     c.unset("apple")
-    a.>converge(c.data())
-    b.>converge(c.data())
+    a.>converge(c)
+    b.>converge(c)
     
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)
