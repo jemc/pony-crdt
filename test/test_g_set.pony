@@ -34,7 +34,7 @@ class TestGSet is UnitTest
 
 class TestGSetDelta is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.GSet (delta-state)"
+  fun name(): String => "crdt.GSet (ẟ)"
   
   fun apply(h: TestHelper) =>
     let a = GSet[String]

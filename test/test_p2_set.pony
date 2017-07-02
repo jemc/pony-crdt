@@ -57,7 +57,7 @@ class TestP2Set is UnitTest
 
 class TestP2SetDelta is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.P2Set (delta-state)"
+  fun name(): String => "crdt.P2Set (ẟ)"
   
   fun apply(h: TestHelper) =>
     let a = P2Set[String]

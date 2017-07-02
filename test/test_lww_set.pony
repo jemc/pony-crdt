@@ -69,7 +69,7 @@ class TestLWWSet is UnitTest
 
 class TestLWWSetDelta is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.LWWSet (delta-state)"
+  fun name(): String => "crdt.LWWSet (ẟ)"
   
   fun apply(h: TestHelper) =>
     let a = LWWSet[String]
