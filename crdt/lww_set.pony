@@ -53,8 +53,6 @@ class ref LWWHashSet[
   new ref create() =>
     _data = std.HashMap[A, (T, Bool), H]
   
-  fun ref _data_update(value: A, status: (T, Bool)) => _data(value) = status
-  
   fun size(): USize =>
     """
     Return the number of items in the set.
