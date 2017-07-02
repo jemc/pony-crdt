@@ -17,7 +17,9 @@ class ref LWWHashSet[
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
   H: std.HashFunction[A] val]
-  is (Comparable[LWWHashSet[A, T, B, H]] & Convergent[LWWHashSet[A, T, B, H]])
+  is
+  ( Comparable[LWWHashSet[A, T, B, H]]
+  & Convergent[LWWHashSet[A, T, B, H] box] )
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -116,7 +118,7 @@ class ref LWWHashSet[
       set(consume value, timestamp)
     end
   
-  fun ref converge(that: LWWHashSet[A, T, B, H]) =>
+  fun ref converge(that: LWWHashSet[A, T, B, H] box) =>
     """
     Converge from the given pair of persistent HashMaps into this set.
     For this data type, the convergence is the union of both constituent sets.
