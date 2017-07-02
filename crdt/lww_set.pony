@@ -120,7 +120,7 @@ class ref LWWHashSet[
   
   fun ref converge(that: LWWHashSet[A, T, B, H] box) =>
     """
-    Converge from the given pair of persistent HashMaps into this set.
+    Converge from the given LWWSet into this one.
     For this data type, the convergence is the union of both constituent sets.
     """
     for (value, timestamp) in that._ins.pairs() do set(value, timestamp) end
@@ -165,8 +165,8 @@ class ref LWWHashSet[
   
   fun string(): String iso^ =>
     """
-    Return a best effort at printing the set. If A is a Stringable box, use the
-    string representation of each value; otherwise print the as question marks.
+    Return a best effort at printing the set. If A is a Stringable, use the
+    string representation of each value; otherwise print them as question marks.
     """
     let buf = recover String((size() * 6) + 1) end
     buf.push('%')

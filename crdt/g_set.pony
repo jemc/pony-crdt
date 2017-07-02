@@ -67,15 +67,15 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
   
   fun ref converge(that: GHashSet[A, H] box) =>
     """
-    Converge from the given GHashSet into this one.
-    For this convergent replicated data type, the convergence is a simple union.
+    Converge from the given GSet into this one.
+    For this data type, the convergence is a simple union.
     """
     union(that._data.values())
   
   fun string(): String iso^ =>
     """
-    Return a best effort at printing the set. If A is a Stringable box, use the
-    string representation of each value; otherwise print the as question marks.
+    Return a best effort at printing the set. If A is a Stringable, use the
+    string representation of each value; otherwise print them as question marks.
     """
     let buf = recover String((size() * 3) + 1) end
     buf.push('%')
