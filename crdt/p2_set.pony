@@ -65,8 +65,8 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     if not _del.contains(value) then
       _ins.set(value)
-      delta._ins_set(value)
     end
+    delta._ins_set(value)
     consume delta
   
   fun ref unset(
