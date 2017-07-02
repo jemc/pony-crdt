@@ -91,7 +91,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     for value in that do
       set(value)
-      delta._del_set(value)
+      delta._ins_set(value)
     end
     consume delta
   
