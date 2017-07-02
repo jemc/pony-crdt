@@ -98,9 +98,7 @@ class TestP2SetDelta is UnitTest
     h.assert_eq[P2Set[String]](c, a)
     
     c_delta = c.unset("banana")
-    a.>converge(c_delta)
-    b.>converge(c_delta)
-    c_delta = c.unset("apple")
+    c_delta = c.unset("apple", consume c_delta)
     a.>converge(c_delta)
     b.>converge(c_delta)
     

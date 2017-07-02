@@ -19,7 +19,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
   Because the set is composed of two grow-only sets that are eventually
   consistent when converged, the overall result is also eventually consistent.
   
-  All mutator methods return a convergent delta-state.
+  All mutator methods accept and return a convergent delta-state.
   """
   embed _ins: std.HashSet[A, H]
   embed _del: std.HashSet[A, H]
@@ -27,6 +27,9 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
   new ref create() =>
     _ins = std.HashSet[A, H]
     _del = std.HashSet[A, H]
+  
+  fun ref _ins_set(value: A) => _ins.set(value)
+  fun ref _del_set(value: A) => _del.set(value)
   
   fun size(): USize =>
     """
@@ -52,39 +55,45 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _del.union(_ins.values())
   
-  fun ref set(value: A): P2HashSet[A, H] =>
+  fun ref set(
+    value: A,
+    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
+  : P2HashSet[A, H] trn^ =>
     """
     Add a value to the set.
-    Returns a delta-state for converging with other instances.
+    Accepts and returns a convergent delta-state.
     """
-    let delta = P2HashSet[A, H]
     if not _del.contains(value) then
       _ins.set(value)
-      delta._ins.set(value)
+      delta._ins_set(value)
     end
-    delta
+    consume delta
   
-  fun ref unset(value: box->A!): P2HashSet[A, H] =>
+  fun ref unset(
+    value: A,
+    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
+  : P2HashSet[A, H] trn^ =>
     """
     Remove a value from the set.
-    Returns a delta-state for converging with other instances.
+    Accepts and returns a convergent delta-state.
     """
-    let delta = P2HashSet[A, H]
     _del.set(value)
-    delta._del.set(value)
-    delta
+    delta._del_set(value)
+    consume delta
   
-  fun ref union(that: Iterator[A]): P2HashSet[A, H] =>
+  fun ref union(
+    that: Iterator[A],
+    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
+  : P2HashSet[A, H] trn^ =>
     """
     Add everything in the given iterator to the set.
-    Returns a delta-state for converging with other instances.
+    Accepts and returns a convergent delta-state.
     """
-    let delta = P2HashSet[A, H]
     for value in that do
       set(value)
-      delta._del.set(value)
+      delta._del_set(value)
     end
-    delta
+    consume delta
   
   fun ref converge(that: P2HashSet[A, H] box) =>
     """

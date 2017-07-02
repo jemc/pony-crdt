@@ -12,12 +12,14 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
   Because the set is unordered and elements can only be added (never deleted),
   the results are eventually consistent when converged.
   
-  All mutator methods return a convergent delta-state.
+  All mutator methods accept and return a convergent delta-state.
   """
   embed _data: std.HashSet[A, H]
   
   new ref create() =>
     _data = std.HashSet[A, H]
+  
+  fun ref _data_set(value: A) => _data.set(value)
   
   fun size(): USize =>
     """
@@ -37,25 +39,29 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _data.contains(value)
   
-  fun ref set(value: A): GHashSet[A, H] =>
+  fun ref set(
+    value: A,
+    delta: GHashSet[A, H] trn = recover GHashSet[A, H] end)
+  : GHashSet[A, H] trn^ =>
     """
     Add a value to the set.
-    Returns a delta-state for converging with other instances.
+    Accepts and returns a convergent delta-state.
     """
-    let delta = GHashSet[A, H]
     _data.set(value)
-    delta._data.set(value)
+    delta._data_set(value)
     delta
   
-  fun ref union(that: Iterator[A]): GHashSet[A, H] =>
+  fun ref union(
+    that: Iterator[A],
+    delta: GHashSet[A, H] trn = recover GHashSet[A, H] end)
+  : GHashSet[A, H] trn^ =>
     """
     Add everything in the given iterator to the set.
-    Returns a delta-state for converging with other instances.
+    Accepts and returns a convergent delta-state.
     """
-    let delta = GHashSet[A, H]
     for value in that do
       _data.set(value)
-      delta._data.set(value)
+      delta._data_set(value)
     end
     delta
   
