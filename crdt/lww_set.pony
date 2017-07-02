@@ -53,6 +53,8 @@ class ref LWWHashSet[
   new ref create() =>
     _data = std.HashMap[A, (T, Bool), H]
   
+  fun ref _data_update(value: A, status: (T, Bool)) => _data(value) = status
+  
   fun size(): USize =>
     """
     Return the number of items in the set.
@@ -73,45 +75,69 @@ class ref LWWHashSet[
     """
     _data.contains(value) and (try _data(value) else return false end)._2
   
-  fun ref clear(timestamp: T) =>
+  fun ref clear(
+    timestamp: T,
+    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
+  : LWWHashSet[A, T, B, H] trn^ =>
     """
     Remove all elements from the set.
     """
-    for value in _data.keys() do unset(value, timestamp) end
+    for value in _data.keys() do
+      unset(value, timestamp)
+      delta._data_update(value, (timestamp, false))
+    end
+    consume delta
   
-  fun ref set(value: A, timestamp: T) =>
+  fun ref set(
+    value: A,
+    timestamp: T,
+    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
+  : LWWHashSet[A, T, B, H] trn^ =>
     """
     Add a value to the set.
     """
+    delta._data_update(value, (timestamp, true))
     try
       (let current_timestamp, let _) = _data(value)
-      if timestamp < current_timestamp then return end
+      if timestamp < current_timestamp then return delta end
       iftype B <: BiasDelete then
-        if (timestamp == current_timestamp) then return end
+        if (timestamp == current_timestamp) then return delta end
       end
     end
     _data(value) = (timestamp, true)
+    consume delta
   
-  fun ref unset(value: box->A!, timestamp: T) =>
+  fun ref unset(
+    value: box->A!,
+    timestamp: T,
+    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
+  : LWWHashSet[A, T, B, H] trn^ =>
     """
     Remove a value from the set.
     """
+    delta._data_update(value, (timestamp, false))
     try
       (let current_timestamp, let _) = _data(value)
-      if timestamp < current_timestamp then return end
+      if timestamp < current_timestamp then return delta end
       iftype B <: BiasInsert then
-        if (timestamp == current_timestamp) then return end
+        if (timestamp == current_timestamp) then return delta end
       end
     end
     _data(value) = (timestamp, false)
+    consume delta
   
-  fun ref union(that: Iterator[(A, T)]) =>
+  fun ref union(
+    that: Iterator[(A, T)],
+    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
+  : LWWHashSet[A, T, B, H] trn^ =>
     """
     Add everything in the given iterator to the set.
     """
     for (value, timestamp) in that do
       set(value, timestamp)
+      delta._data_update(value, (timestamp, true))
     end
+    consume delta
   
   fun ref converge(that: LWWHashSet[A, T, B, H] box) =>
     """
