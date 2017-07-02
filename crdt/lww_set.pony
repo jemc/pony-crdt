@@ -82,6 +82,15 @@ class ref LWWHashSet[
     """
     Remove all elements from the set.
     """
+    // TODO: save memory and have stronger consistency by setting a "cleared"
+    // timestamp internally, removing all entries older than this timestamp,
+    // and testing against that timestamp before receiving any new entries.
+    // This timestamp could also be "raised" in a periodic garbage collection
+    // to shrink the memory footprint of the state without losing information.
+    // Note that this timestamp will need to be part of the replicated state.
+    // When this feature is added, it should be noted in the dosctring for this
+    // data type that the memory usage is not grow-only, which is a highly
+    // desirable feature that we want to highlight wherever we can.
     for value in _data.keys() do
       unset(value, timestamp)
       delta._data_update(value, (timestamp, false))
