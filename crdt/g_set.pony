@@ -1,11 +1,10 @@
-use mut = "collections"
-use std = "collections/persistent"
+use std = "collections"
 
-type GSet[A: (mut.Hashable val & Equatable[A])] is GHashSet[A, mut.HashEq[A]]
+type GSet[A: (std.Hashable val & Equatable[A])] is GHashSet[A, std.HashEq[A]]
 
-type GSetIs[A: Any #share] is GHashSet[A, mut.HashIs[A]]
+type GSetIs[A: Any #share] is GHashSet[A, std.HashIs[A]]
 
-class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
+class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
   is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H] box])
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
@@ -15,13 +14,10 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
   
   All mutator methods return a convergent delta-state.
   """
-  var _data: std.HashSet[A, H]
+  embed _data: std.HashSet[A, H]
   
   new ref create() =>
     _data = std.HashSet[A, H]
-  
-  new ref _of(data': std.HashSet[A, H]) =>
-    _data = data'
   
   fun size(): USize =>
     """
@@ -46,20 +42,22 @@ class ref GHashSet[A: Any #share, H: mut.HashFunction[A] val]
     Add a value to the set.
     Returns a delta-state for converging with other instances.
     """
-    _data = _data + value
-    GHashSet[A, H]._of(std.HashSet[A, H] + value) // delta
+    let delta = GHashSet[A, H]
+    _data.set(value)
+    delta._data.set(value)
+    delta
   
   fun ref union(that: Iterator[A]): GHashSet[A, H] =>
     """
     Add everything in the given iterator to the set.
     Returns a delta-state for converging with other instances.
     """
-    var delta = std.HashSet[A, H]
+    let delta = GHashSet[A, H]
     for value in that do
-      _data = _data + value
-      delta = delta + value
+      _data.set(value)
+      delta._data.set(value)
     end
-    GHashSet[A, H]._of(delta)
+    delta
   
   fun ref converge(that: GHashSet[A, H] box) =>
     """
