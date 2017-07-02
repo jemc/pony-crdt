@@ -6,5 +6,6 @@ actor Main is TestList
   
   fun tag tests(test: PonyTest) =>
     test(TestGSet)
+    test(TestGSetDelta)
     test(TestP2Set)
     test(TestLWWSet)
