@@ -1,23 +1,22 @@
-use mut = "collections"
-use std = "collections/persistent"
+use std = "collections"
 
 type LWWSet[
-  A: (mut.Hashable val & Equatable[A]),
+  A: (std.Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is LWWHashSet[A, T, B, mut.HashEq[A]]
+  is LWWHashSet[A, T, B, std.HashEq[A]]
 
 type LWWSetIs[
-  A: (mut.Hashable val & Equatable[A]),
+  A: (std.Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is LWWHashSet[A, T, B, mut.HashIs[A]]
+  is LWWHashSet[A, T, B, std.HashIs[A]]
 
 class ref LWWHashSet[
   A: Any #share,
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
-  H: mut.HashFunction[A] val]
+  H: std.HashFunction[A] val]
   is (Comparable[LWWHashSet[A, T, B, H]] & Convergent[LWWHashSet[A, T, B, H]])
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
@@ -48,8 +47,8 @@ class ref LWWHashSet[
   consistent when converged, the overall result is also eventually consistent.
   The same bias must be used on all replicas for tie results to be consistent.
   """
-  var _ins: std.HashMap[A, T, H]
-  var _del: std.HashMap[A, T, H]
+  embed _ins: std.HashMap[A, T, H]
+  embed _del: std.HashMap[A, T, H]
   
   new ref create() =>
     _ins = std.HashMap[A, T, H]
@@ -98,7 +97,7 @@ class ref LWWHashSet[
     Add a value to the set.
     """
     if (try _ins(value) < timestamp else true end) then
-      _ins = _ins.update(value, timestamp)
+      _ins(value) = timestamp
     end
   
   fun ref unset(value: box->A!, timestamp: T) =>
@@ -106,16 +105,8 @@ class ref LWWHashSet[
     Remove a value from the set.
     """
     if (try _del(value) < timestamp else true end) then
-      _del = _del.update(value, timestamp)
+      _del(value) = timestamp
     end
-  
-  fun ref extract(value: box->A!): A^ ? =>
-    """
-    Remove a value from the set and return it. Raises an error if the value
-    wasn't in the set.
-    """
-    apply(value)
-    value
   
   fun ref union(that: Iterator[(A, T)]) =>
     """
@@ -139,7 +130,7 @@ class ref LWWHashSet[
     Information about specific deletions is discarded, so that the case of a
     deleted element is indistinct from that of an element never inserted.
     """
-    var out = std.HashSet[A, H]
+    let out = std.HashSet[A, H]
     for (value, timestamp) in _ins.pairs() do
       let present =
         iftype B <: BiasInsert then
@@ -147,7 +138,7 @@ class ref LWWHashSet[
         else
           (try _del(value) < timestamp else true end)
         end
-      if present then out = out + value end
+      if present then out.set(value) end
     end
     out
   
@@ -158,7 +149,7 @@ class ref LWWHashSet[
     Information about specific deletions is discarded, so that the case of a
     deleted element is indistinct from that of an element never inserted.
     """
-    var out = std.HashMap[A, T, H]
+    let out = std.HashMap[A, T, H]
     for (value, timestamp) in _ins.pairs() do
       let present =
         iftype B <: BiasInsert then
@@ -166,7 +157,7 @@ class ref LWWHashSet[
         else
           (try _del(value) < timestamp else true end)
         end
-      if present then out = out.update(value, timestamp) end
+      if present then out(value) = timestamp end
     end
     out
   
