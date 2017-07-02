@@ -18,6 +18,8 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
   
   Because the set is composed of two grow-only sets that are eventually
   consistent when converged, the overall result is also eventually consistent.
+  
+  All mutator methods return a convergent delta-state.
   """
   embed _ins: std.HashSet[A, H]
   embed _del: std.HashSet[A, H]
@@ -50,34 +52,39 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _del.union(_ins.values())
   
-  fun ref set(value: A) =>
+  fun ref set(value: A): P2HashSet[A, H] =>
     """
     Add a value to the set.
+    Returns a delta-state for converging with other instances.
     """
-    _ins.set(value)
+    let delta = P2HashSet[A, H]
+    if not _del.contains(value) then
+      _ins.set(value)
+      delta._ins.set(value)
+    end
+    delta
   
-  fun ref unset(value: box->A!) =>
+  fun ref unset(value: box->A!): P2HashSet[A, H] =>
     """
     Remove a value from the set.
+    Returns a delta-state for converging with other instances.
     """
+    let delta = P2HashSet[A, H]
     _del.set(value)
+    delta._del.set(value)
+    delta
   
-  fun ref extract(value: box->A!): A^ ? =>
-    """
-    Remove a value from the set and return it. Raises an error if the value
-    wasn't in the set.
-    """
-    if _del.contains(value) then error end
-    _del.set(value)
-    _ins(value)
-  
-  fun ref union(that: Iterator[A]) =>
+  fun ref union(that: Iterator[A]): P2HashSet[A, H] =>
     """
     Add everything in the given iterator to the set.
+    Returns a delta-state for converging with other instances.
     """
+    let delta = P2HashSet[A, H]
     for value in that do
-      set(consume value)
+      set(value)
+      delta._del.set(value)
     end
+    delta
   
   fun ref converge(that: P2HashSet[A, H] box) =>
     """

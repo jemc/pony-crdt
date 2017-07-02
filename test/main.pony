@@ -8,4 +8,5 @@ actor Main is TestList
     test(TestGSet)
     test(TestGSetDelta)
     test(TestP2Set)
+    test(TestP2SetDelta)
     test(TestLWWSet)
