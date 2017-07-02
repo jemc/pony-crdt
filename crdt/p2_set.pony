@@ -77,6 +77,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     Remove a value from the set.
     Accepts and returns a convergent delta-state.
     """
+    // TODO: Reduce memory footprint by also removing from _ins set?
     _del.set(value)
     delta._del_set(value)
     consume delta
