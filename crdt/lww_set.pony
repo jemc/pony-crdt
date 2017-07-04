@@ -43,6 +43,7 @@ class ref LWWHashSet[
   If the logical timestamp is equal for two compared operations, the tie will
   be broken by the bias type parameter. BiasInsert implies that inserts will
   override deletions in a tie, while BiasDelete implies the opposite.
+  The default bias is BiasInsert.
   
   Because the set is composed of two grow-only sets that are eventually
   consistent when converged, the overall result is also eventually consistent.

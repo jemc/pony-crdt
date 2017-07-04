@@ -15,6 +15,7 @@ class ref LWWReg[
   If the logical timestamp is equal for two compared operations, the tie will
   be broken by the bias type parameter. BiasGreater implies that the greater of
   the two compared values will be chosen, while BiasLesser implies the opposite.
+  The default bias is BiasGreater.
   
   Because there is a order-independent way of comparing both the timestamp and
   the value term of all update operations, all conflicts can be resolved in a
