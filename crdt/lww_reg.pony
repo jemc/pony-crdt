@@ -17,7 +17,7 @@ class ref LWWReg[
   the two compared values will be chosen, while BiasLesser implies the opposite.
   The default bias is BiasGreater.
   
-  Because there is a order-independent way of comparing both the timestamp and
+  Because there is an order-independent way of comparing both the timestamp and
   the value term of all update operations, all conflicts can be resolved in a
   commutative way; thus, the result is eventually consistent in all replicas.
   The same bias must be used on all replicas for tie results to be consistent.
