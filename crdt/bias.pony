@@ -1,2 +1,4 @@
 primitive BiasInsert
 primitive BiasDelete
+primitive BiasGreater
+primitive BiasLesser

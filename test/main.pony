@@ -12,3 +12,5 @@ actor Main is TestList
     test(TestP2SetDelta)
     test(TestLWWSet)
     test(TestLWWSetDelta)
+    test(TestLWWReg)
+    test(TestLWWRegDelta)
