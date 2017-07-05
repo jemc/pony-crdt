@@ -48,6 +48,8 @@ class ref LWWHashSet[
   Because the set is composed of two grow-only sets that are eventually
   consistent when converged, the overall result is also eventually consistent.
   The same bias must be used on all replicas for tie results to be consistent.
+  
+  All mutator methods accept and return a convergent delta-state.
   """
   embed _data: std.HashMap[A, (T, Bool), H]
   
@@ -100,6 +102,7 @@ class ref LWWHashSet[
   : LWWHashSet[A, T, B, H] trn^ =>
     """
     Remove all elements from the set.
+    Accepts and returns a convergent delta-state.
     """
     // TODO: save memory and have stronger consistency by setting a "cleared"
     // timestamp internally, removing all entries older than this timestamp,
@@ -123,6 +126,7 @@ class ref LWWHashSet[
   : LWWHashSet[A, T, B, H] trn^ =>
     """
     Add a value to the set.
+    Accepts and returns a convergent delta-state.
     """
     _set_no_delta(value, timestamp)
     delta._set_no_delta(value, timestamp)
@@ -135,6 +139,7 @@ class ref LWWHashSet[
   : LWWHashSet[A, T, B, H] trn^ =>
     """
     Remove a value from the set.
+    Accepts and returns a convergent delta-state.
     """
     _unset_no_delta(value, timestamp)
     delta._unset_no_delta(value, timestamp)
@@ -146,6 +151,7 @@ class ref LWWHashSet[
   : LWWHashSet[A, T, B, H] trn^ =>
     """
     Add everything in the given iterator to the set.
+    Accepts and returns a convergent delta-state.
     """
     for (value, timestamp) in that do
       _set_no_delta(value, timestamp)

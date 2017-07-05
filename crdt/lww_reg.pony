@@ -21,6 +21,8 @@ class ref LWWReg[
   the value term of all update operations, all conflicts can be resolved in a
   commutative way; thus, the result is eventually consistent in all replicas.
   The same bias must be used on all replicas for tie results to be consistent.
+  
+  All mutator methods accept and return a convergent delta-state.
   """
   var _value: A
   var _timestamp: T
@@ -70,6 +72,7 @@ class ref LWWReg[
     Update the value and timestamp of the register, provided that the given
     timestamp is newer than the current timestamp of the register.
     If the given timestamp is older, the update is ignored.
+    Accepts and returns a convergent delta-state.
     """
     _update_no_delta(value', timestamp')
     
