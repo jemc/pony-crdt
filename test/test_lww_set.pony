@@ -16,7 +16,7 @@ class TestLWWSet is UnitTest
     
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
-    h.assert_eq[USize](b.size(), 1)
+    h.assert_eq[USize](c.size(), 1)
     h.assert_ne[LWWSet[String]](a, b)
     h.assert_ne[LWWSet[String]](b, c)
     h.assert_ne[LWWSet[String]](c, a)
@@ -27,7 +27,7 @@ class TestLWWSet is UnitTest
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
-    h.assert_eq[USize](b.size(), 3)
+    h.assert_eq[USize](c.size(), 3)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -38,7 +38,7 @@ class TestLWWSet is UnitTest
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
-    h.assert_eq[USize](b.size(), 2)
+    h.assert_eq[USize](c.size(), 2)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -50,7 +50,7 @@ class TestLWWSet is UnitTest
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
-    h.assert_eq[USize](b.size(), 2)
+    h.assert_eq[USize](c.size(), 2)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -62,7 +62,7 @@ class TestLWWSet is UnitTest
     
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)
-    h.assert_eq[USize](b.size(), 0)
+    h.assert_eq[USize](c.size(), 0)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -82,7 +82,7 @@ class TestLWWSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
-    h.assert_eq[USize](b.size(), 1)
+    h.assert_eq[USize](c.size(), 1)
     h.assert_ne[LWWSet[String]](a, b)
     h.assert_ne[LWWSet[String]](b, c)
     h.assert_ne[LWWSet[String]](c, a)
@@ -93,7 +93,7 @@ class TestLWWSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
-    h.assert_eq[USize](b.size(), 3)
+    h.assert_eq[USize](c.size(), 3)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -104,7 +104,7 @@ class TestLWWSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
-    h.assert_eq[USize](b.size(), 2)
+    h.assert_eq[USize](c.size(), 2)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -116,7 +116,7 @@ class TestLWWSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
-    h.assert_eq[USize](b.size(), 2)
+    h.assert_eq[USize](c.size(), 2)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)
@@ -128,7 +128,7 @@ class TestLWWSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)
-    h.assert_eq[USize](b.size(), 0)
+    h.assert_eq[USize](c.size(), 0)
     h.assert_eq[LWWSet[String]](a, b)
     h.assert_eq[LWWSet[String]](b, c)
     h.assert_eq[LWWSet[String]](c, a)

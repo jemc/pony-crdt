@@ -16,7 +16,7 @@ class TestGSet is UnitTest
     
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
-    h.assert_eq[USize](b.size(), 1)
+    h.assert_eq[USize](c.size(), 1)
     h.assert_ne[GSet[String]](a, b)
     h.assert_ne[GSet[String]](b, c)
     h.assert_ne[GSet[String]](c, a)
@@ -27,7 +27,7 @@ class TestGSet is UnitTest
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
-    h.assert_eq[USize](b.size(), 3)
+    h.assert_eq[USize](c.size(), 3)
     h.assert_eq[GSet[String]](a, b)
     h.assert_eq[GSet[String]](b, c)
     h.assert_eq[GSet[String]](c, a)
@@ -47,7 +47,7 @@ class TestGSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
-    h.assert_eq[USize](b.size(), 1)
+    h.assert_eq[USize](c.size(), 1)
     h.assert_ne[GSet[String]](a, b)
     h.assert_ne[GSet[String]](b, c)
     h.assert_ne[GSet[String]](c, a)
@@ -58,7 +58,7 @@ class TestGSetDelta is UnitTest
     
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
-    h.assert_eq[USize](b.size(), 3)
+    h.assert_eq[USize](c.size(), 3)
     h.assert_eq[GSet[String]](a, b)
     h.assert_eq[GSet[String]](b, c)
     h.assert_eq[GSet[String]](c, a)
