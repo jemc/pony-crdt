@@ -79,22 +79,11 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     Return a best effort at printing the register. If A is Stringable, use
     the string representation of the value; otherwise print as a question mark.
     """
-    let buf = recover String(8) end
-    buf.push('%')
-    buf.push('(')
     iftype A <: Stringable val then
-      buf.append(value().string())
+      value().string()
     else
-      buf.push('?')
+      "?".clone()
     end
-    buf .> push(',').push(' ')
-    iftype A <: Stringable val then
-      buf.append(value().string())
-    else
-      buf.push('?')
-    end
-    buf.push(')')
-    consume buf
   
   fun eq(that: GCounter[A] box): Bool => value().eq(that.value())
   fun ne(that: GCounter[A] box): Bool => value().ne(that.value())
