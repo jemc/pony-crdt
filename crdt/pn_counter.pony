@@ -22,8 +22,8 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
   All mutator methods accept and return a convergent delta-state.
   """
   let _id: U64
-  var _pos: Map[U64, A]
-  var _neg: Map[U64, A]
+  embed _pos: Map[U64, A]
+  embed _neg: Map[U64, A]
   
   new ref create(id': U64) =>
     """

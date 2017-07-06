@@ -26,7 +26,7 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
   All mutator methods accept and return a convergent delta-state.
   """
   let _id: U64
-  var _data: Map[U64, A]
+  embed _data: Map[U64, A]
   
   new ref create(id': U64) =>
     """
