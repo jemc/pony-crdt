@@ -63,11 +63,11 @@ class ref LWWReg[
       _timestamp = timestamp'
     end
   
-  fun ref update(
+  fun ref update[D: LWWReg[A, T, B] #write = LWWReg[A, T, B] trn](
     value': A,
     timestamp': T,
-    delta': (LWWReg[A, T, B] trn | None) = None)
-  : LWWReg[A, T, B] trn^ =>
+    delta': (D | None) = None)
+  : D^ =>
     """
     Update the value and timestamp of the register, provided that the given
     timestamp is newer than the current timestamp of the register.
@@ -77,7 +77,7 @@ class ref LWWReg[
     _update_no_delta(value', timestamp')
     
     match consume delta'
-    | let delta: LWWReg[A, T, B] trn =>
+    | let delta: D =>
       delta._update_no_delta(value', timestamp')
       consume delta
     else

@@ -96,10 +96,10 @@ class ref LWWHashSet[
     end
     _data(value) = (timestamp, false)
   
-  fun ref clear(
+  fun ref clear[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
     timestamp: T,
-    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
-  : LWWHashSet[A, T, B, H] trn^ =>
+    delta: D = recover LWWHashSet[A, T, B, H] end)
+  : D^ =>
     """
     Remove all elements from the set.
     Accepts and returns a convergent delta-state.
@@ -119,11 +119,11 @@ class ref LWWHashSet[
     end
     consume delta
   
-  fun ref set(
+  fun ref set[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
     value: A,
     timestamp: T,
-    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
-  : LWWHashSet[A, T, B, H] trn^ =>
+    delta: D = recover LWWHashSet[A, T, B, H] end)
+  : D^ =>
     """
     Add a value to the set.
     Accepts and returns a convergent delta-state.
@@ -132,11 +132,11 @@ class ref LWWHashSet[
     delta._set_no_delta(value, timestamp)
     consume delta
   
-  fun ref unset(
+  fun ref unset[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
     value: box->A!,
     timestamp: T,
-    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
-  : LWWHashSet[A, T, B, H] trn^ =>
+    delta: D = recover LWWHashSet[A, T, B, H] end)
+  : D^ =>
     """
     Remove a value from the set.
     Accepts and returns a convergent delta-state.
@@ -145,10 +145,10 @@ class ref LWWHashSet[
     delta._unset_no_delta(value, timestamp)
     consume delta
   
-  fun ref union(
+  fun ref union[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
     that: Iterator[(A, T)],
-    delta: LWWHashSet[A, T, B, H] trn = recover LWWHashSet[A, T, B, H] end)
-  : LWWHashSet[A, T, B, H] trn^ =>
+    delta: D = recover LWWHashSet[A, T, B, H] end)
+  : D^ =>
     """
     Add everything in the given iterator to the set.
     Accepts and returns a convergent delta-state.

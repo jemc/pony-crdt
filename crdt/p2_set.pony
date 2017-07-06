@@ -55,10 +55,10 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _del.union(_ins.values())
   
-  fun ref set(
+  fun ref set[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
     value: A,
-    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
-  : P2HashSet[A, H] trn^ =>
+    delta: D = recover P2HashSet[A, H] end)
+  : D^ =>
     """
     Add a value to the set.
     Accepts and returns a convergent delta-state.
@@ -69,10 +69,10 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._ins_set(value)
     consume delta
   
-  fun ref unset(
+  fun ref unset[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
     value: A,
-    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
-  : P2HashSet[A, H] trn^ =>
+    delta: D = recover P2HashSet[A, H] end)
+  : D^ =>
     """
     Remove a value from the set.
     Accepts and returns a convergent delta-state.
@@ -82,10 +82,10 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._del_set(value)
     consume delta
   
-  fun ref union(
+  fun ref union[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
     that: Iterator[A],
-    delta: P2HashSet[A, H] trn = recover P2HashSet[A, H] end)
-  : P2HashSet[A, H] trn^ =>
+    delta: D = recover P2HashSet[A, H] end)
+  : D^ =>
     """
     Add everything in the given iterator to the set.
     Accepts and returns a convergent delta-state.

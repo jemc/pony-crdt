@@ -39,10 +39,10 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _data.contains(value)
   
-  fun ref set(
+  fun ref set[D: GHashSet[A, H] #write = GHashSet[A, H] trn](
     value: A,
-    delta: GHashSet[A, H] trn = recover GHashSet[A, H] end)
-  : GHashSet[A, H] trn^ =>
+    delta: D = recover GHashSet[A, H] end)
+  : D^ =>
     """
     Add a value to the set.
     Accepts and returns a convergent delta-state.
@@ -51,10 +51,10 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._data_set(value)
     delta
   
-  fun ref union(
+  fun ref union[D: GHashSet[A, H] #write = GHashSet[A, H] trn](
     that: Iterator[A],
-    delta: GHashSet[A, H] trn = recover GHashSet[A, H] end)
-  : GHashSet[A, H] trn^ =>
+    delta: D = recover GHashSet[A, H] end)
+  : D^ =>
     """
     Add everything in the given iterator to the set.
     Accepts and returns a convergent delta-state.

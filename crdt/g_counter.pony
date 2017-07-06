@@ -51,10 +51,10 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
   
   fun ref _data_update(id': U64, value': A) => _data(id') = value'
   
-  fun ref increment(
+  fun ref increment[D: GCounter[A] #write = GCounter[A] trn](
     value': A = 1,
-    delta': GCounter[A] trn = recover GCounter[A](0) end)
-  : GCounter[A] trn^ =>
+    delta': D = recover GCounter[A](0) end)
+  : D^ =>
     """
     Increment the counter by the given value.
     Accepts and returns a convergent delta-state.
