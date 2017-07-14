@@ -1,5 +1,5 @@
 use "ponytest"
-use "../crdt"
+use ".."
 
 class TestP2Set is UnitTest
   new iso create() => None

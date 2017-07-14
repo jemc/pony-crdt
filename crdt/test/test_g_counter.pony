@@ -1,5 +1,5 @@
 use "ponytest"
-use "../crdt"
+use ".."
 
 class TestGCounter is UnitTest
   new iso create() => None

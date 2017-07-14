@@ -1,5 +1,4 @@
 use "ponytest"
-use "../crdt"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
