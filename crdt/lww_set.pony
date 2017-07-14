@@ -96,7 +96,7 @@ class ref LWWHashSet[
     end
     _data(value) = (timestamp, false)
   
-  fun ref clear[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
+  fun ref clear[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
     timestamp: T,
     delta: D = recover LWWHashSet[A, T, B, H] end)
   : D^ =>
@@ -119,7 +119,7 @@ class ref LWWHashSet[
     end
     consume delta
   
-  fun ref set[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
+  fun ref set[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
     value: A,
     timestamp: T,
     delta: D = recover LWWHashSet[A, T, B, H] end)
@@ -132,7 +132,7 @@ class ref LWWHashSet[
     delta._set_no_delta(value, timestamp)
     consume delta
   
-  fun ref unset[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
+  fun ref unset[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
     value: box->A!,
     timestamp: T,
     delta: D = recover LWWHashSet[A, T, B, H] end)
@@ -145,7 +145,7 @@ class ref LWWHashSet[
     delta._unset_no_delta(value, timestamp)
     consume delta
   
-  fun ref union[D: LWWHashSet[A, T, B, H] #write = LWWHashSet[A, T, B, H] trn](
+  fun ref union[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
     that: Iterator[(A, T)],
     delta: D = recover LWWHashSet[A, T, B, H] end)
   : D^ =>

@@ -55,7 +55,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _del.union(_ins.values())
   
-  fun ref set[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
+  fun ref set[D: P2HashSet[A, H] ref = P2HashSet[A, H]](
     value: A,
     delta: D = recover P2HashSet[A, H] end)
   : D^ =>
@@ -69,7 +69,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._ins_set(value)
     consume delta
   
-  fun ref unset[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
+  fun ref unset[D: P2HashSet[A, H] ref = P2HashSet[A, H]](
     value: A,
     delta: D = recover P2HashSet[A, H] end)
   : D^ =>
@@ -82,7 +82,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._del_set(value)
     consume delta
   
-  fun ref union[D: P2HashSet[A, H] #write = P2HashSet[A, H] trn](
+  fun ref union[D: P2HashSet[A, H] ref = P2HashSet[A, H]](
     that: Iterator[A],
     delta: D = recover P2HashSet[A, H] end)
   : D^ =>

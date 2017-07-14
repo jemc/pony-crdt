@@ -39,7 +39,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     _data.contains(value)
   
-  fun ref set[D: GHashSet[A, H] #write = GHashSet[A, H] trn](
+  fun ref set[D: GHashSet[A, H] ref = GHashSet[A, H]](
     value: A,
     delta: D = recover GHashSet[A, H] end)
   : D^ =>
@@ -51,7 +51,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     delta._data_set(value)
     delta
   
-  fun ref union[D: GHashSet[A, H] #write = GHashSet[A, H] trn](
+  fun ref union[D: GHashSet[A, H] ref = GHashSet[A, H]](
     that: Iterator[A],
     delta: D = recover GHashSet[A, H] end)
   : D^ =>

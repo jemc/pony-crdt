@@ -51,7 +51,7 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
   fun ref _pos_update(id': U64, value': A) => _pos(id') = value'
   fun ref _neg_update(id': U64, value': A) => _neg(id') = value'
   
-  fun ref increment[D: PNCounter[A] #write = PNCounter[A] trn](
+  fun ref increment[D: PNCounter[A] ref = PNCounter[A]](
     value': A = 1,
     delta': D = recover PNCounter[A](0) end)
   : D^ =>
@@ -65,7 +65,7 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     end
     consume delta'
   
-  fun ref decrement[D: PNCounter[A] #write = PNCounter[A] trn](
+  fun ref decrement[D: PNCounter[A] ref = PNCounter[A]](
     value': A = 1,
     delta': D = recover PNCounter[A](0) end)
   : D^ =>

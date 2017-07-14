@@ -63,7 +63,7 @@ class ref LWWReg[
       _timestamp = timestamp'
     end
   
-  fun ref update[D: LWWReg[A, T, B] #write = LWWReg[A, T, B] trn](
+  fun ref update[D: LWWReg[A, T, B] ref = LWWReg[A, T, B]](
     value': A,
     timestamp': T,
     delta': (D | None) = None)

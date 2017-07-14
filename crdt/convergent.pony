@@ -1,2 +1,2 @@
-trait Convergent[A: Any box]
-  fun ref converge(that: A)
+trait Convergent[A: Convergent[A] #read]
+  fun ref converge(that: box->A)

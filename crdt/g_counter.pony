@@ -1,7 +1,7 @@
 use "collections"
 
 class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
-  is (Comparable[GCounter[A]] & Convergent[GCounter[A] box])
+  is (Comparable[GCounter[A]] & Convergent[GCounter[A]])
   """
   A mutable grow-only counter. That is, the value can only be increased.
   
@@ -51,7 +51,7 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
   
   fun ref _data_update(id': U64, value': A) => _data(id') = value'
   
-  fun ref increment[D: GCounter[A] #write = GCounter[A] trn](
+  fun ref increment[D: GCounter[A] ref = GCounter[A]](
     value': A = 1,
     delta': D = recover GCounter[A](0) end)
   : D^ =>
