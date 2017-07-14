@@ -3,7 +3,7 @@ all: test
 
 PKG=crdt
 
-bin/test: $(shell find ${PKG}/*.pony ${PKG}/**/*.pony)
+bin/test: $(shell find ${PKG} -name *.pony)
 	mkdir -p bin
 	ponyc --debug -o bin ${PKG}/test
 
@@ -11,7 +11,7 @@ test: bin/test
 	$^
 
 clean:
-	rm -rf bin lib/libpony-${PKG}.so
+	rm -rf bin
 
 lldb:
 	lldb -o run -- $(shell which ponyc) --debug -o /tmp ${PKG}/test
