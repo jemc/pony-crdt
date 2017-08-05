@@ -5,7 +5,7 @@ type P2Set[A: (std.Hashable val & Equatable[A])] is P2HashSet[A, std.HashEq[A]]
 type P2SetIs[A: Any #share] is P2HashSet[A, std.HashIs[A]]
 
 class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
-  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H] box])
+  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]])
   """
   An unordered mutable two-phase set that supports one-time removal.
   That is, once an element has been deleted it may never be inserted again.
@@ -41,7 +41,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     Return the value if it's in the set, otherwise raise an error.
     """
-    if _del.contains(value) then error else _ins(value) end
+    if _del.contains(value) then error else _ins(value)? end
   
   fun contains(value: val->A): Bool =>
     """

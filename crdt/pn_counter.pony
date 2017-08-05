@@ -1,7 +1,7 @@
 use "collections"
 
 class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
-  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A] box])
+  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]])
   """
   A mutable counter, which can be both increased and decreased.
   
@@ -60,7 +60,7 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     Accepts and returns a convergent delta-state.
     """
     try
-      let v' = _pos.upsert(_id, value', {(v: A, value': A): A => v + value' })
+      let v' = _pos.upsert(_id, value', {(v: A, value': A): A => v + value' })?
       delta'._pos_update(_id, v')
     end
     consume delta'
@@ -74,7 +74,7 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     Accepts and returns a convergent delta-state.
     """
     try
-      let v' = _neg.upsert(_id, value', {(v: A, value': A): A => v + value' })
+      let v' = _neg.upsert(_id, value', {(v: A, value': A): A => v + value' })?
       delta'._neg_update(_id, v')
     end
     consume delta'
@@ -85,10 +85,10 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     We converge the positive and negative counters, pairwise.
     """
     for (id, value') in that._pos.pairs() do
-      try _pos.upsert(id, value', {(v: A, value': A): A => v.max(value') }) end
+      try _pos.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
     end
     for (id, value') in that._neg.pairs() do
-      try _neg.upsert(id, value', {(v: A, value': A): A => v.max(value') }) end
+      try _neg.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
     end
   
   fun string(): String iso^ =>

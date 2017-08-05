@@ -5,7 +5,7 @@ type GSet[A: (std.Hashable val & Equatable[A])] is GHashSet[A, std.HashEq[A]]
 type GSetIs[A: Any #share] is GHashSet[A, std.HashIs[A]]
 
 class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
-  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H] box])
+  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]])
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
   
@@ -31,7 +31,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     Return the value if it's in the set, otherwise raise an error.
     """
-    _data(value)
+    _data(value)?
   
   fun contains(value: val->A): Bool =>
     """

@@ -2,7 +2,7 @@ class ref LWWReg[
   A: Comparable[A] val,
   T: Comparable[T] val = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[LWWReg[A, T, B]] & Convergent[LWWReg[A, T, B] box])
+  is (Equatable[LWWReg[A, T, B]] & Convergent[LWWReg[A, T, B]])
   """
   A mutable register with last-write-wins semantics for updating the value.
   That is, every update operation includes a logical timestamp (U64 by default,

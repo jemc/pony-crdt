@@ -60,7 +60,7 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     Accepts and returns a convergent delta-state.
     """
     try
-      let v' = _data.upsert(_id, value', {(v: A, value': A): A => v + value' })
+      let v' = _data.upsert(_id, value', {(v: A, value': A): A => v + value' })?
       delta'._data_update(_id, v')
     end
     consume delta'
@@ -71,7 +71,7 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     For each replica state, we select the maximum value seen so far (grow-only).
     """
     for (id, value') in that._data.pairs() do
-      try _data.upsert(id, value', {(v: A, value': A): A => v.max(value') }) end
+      try _data.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
     end
   
   fun string(): String iso^ =>

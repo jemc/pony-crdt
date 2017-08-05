@@ -19,7 +19,7 @@ class ref LWWHashSet[
   H: std.HashFunction[A] val]
   is
   ( Comparable[LWWHashSet[A, T, B, H]]
-  & Convergent[LWWHashSet[A, T, B, H] box] )
+  & Convergent[LWWHashSet[A, T, B, H]] )
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -66,7 +66,7 @@ class ref LWWHashSet[
     """
     Return the logical timestamp if it's in the set, otherwise raise an error.
     """
-    (let timestamp, let present) = _data(value)
+    (let timestamp, let present) = _data(value)?
     if not present then error end
     timestamp
   
@@ -74,11 +74,11 @@ class ref LWWHashSet[
     """
     Check whether the set contains the given value.
     """
-    _data.contains(value) and (try _data(value) else return false end)._2
+    _data.contains(value) and (try _data(value)? else return false end)._2
   
   fun ref _set_no_delta(value: A, timestamp: T) =>
     try
-      (let current_timestamp, let _) = _data(value)
+      (let current_timestamp, let _) = _data(value)?
       if timestamp < current_timestamp then return end
       iftype B <: BiasDelete then
         if (timestamp == current_timestamp) then return end
@@ -88,7 +88,7 @@ class ref LWWHashSet[
   
   fun ref _unset_no_delta(value: box->A!, timestamp: T) =>
     try
-      (let current_timestamp, let _) = _data(value)
+      (let current_timestamp, let _) = _data(value)?
       if timestamp < current_timestamp then return end
       iftype B <: BiasInsert then
         if (timestamp == current_timestamp) then return end
