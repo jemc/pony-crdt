@@ -54,6 +54,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     Remove all elements from the set.
     """
     _del.union(_ins.values())
+    _ins.clear() // not strictly necessary, but reduces memory footprint
   
   fun ref set[D: P2HashSet[A, H] ref = P2HashSet[A, H]](
     value: A,
@@ -65,8 +66,8 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     """
     if not _del.contains(value) then
       _ins.set(value)
+      delta._ins_set(value)
     end
-    delta._ins_set(value)
     consume delta
   
   fun ref unset[D: P2HashSet[A, H] ref = P2HashSet[A, H]](
@@ -78,6 +79,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     Accepts and returns a convergent delta-state.
     """
     // TODO: Reduce memory footprint by also removing from _ins set?
+    _ins.unset(value) // not strictly necessary, but reduces memory footprint
     _del.set(value)
     delta._del_set(value)
     consume delta
@@ -90,11 +92,11 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     Add everything in the given iterator to the set.
     Accepts and returns a convergent delta-state.
     """
+    var delta' = consume delta
     for value in that do
-      set(value)
-      delta._ins_set(value)
+      delta' = set[D](value, consume delta')
     end
-    consume delta
+    consume delta'
   
   fun ref converge(that: P2HashSet[A, H] box) =>
     """
