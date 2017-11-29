@@ -17,9 +17,12 @@ class TestLWWReg is UnitTest
     h.assert_eq[U64](b.timestamp(), 2)
     h.assert_eq[U64](c.timestamp(), 1)
     
-    a.>converge(b).>converge(c)
-    b.>converge(c).>converge(a)
-    c.>converge(a).>converge(b)
+    h.assert_false(a.converge(b))
+    h.assert_false(a.converge(c))
+    h.assert_false(b.converge(c))
+    h.assert_true(b.converge(a))
+    h.assert_true(c.converge(a))
+    h.assert_false(c.converge(b))
     
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "apple")
@@ -39,9 +42,12 @@ class TestLWWReg is UnitTest
     h.assert_eq[U64](b.timestamp(), 5)
     h.assert_eq[U64](c.timestamp(), 5)
     
-    a.>converge(b).>converge(c)
-    b.>converge(c).>converge(a)
-    c.>converge(a).>converge(b)
+    h.assert_true(a.converge(b))
+    h.assert_true(a.converge(c))
+    h.assert_true(b.converge(c))
+    h.assert_false(b.converge(a))
+    h.assert_false(c.converge(a))
+    h.assert_false(c.converge(b))
     
     h.assert_eq[String](a.value(), "currant")
     h.assert_eq[String](b.value(), "currant")
@@ -66,9 +72,12 @@ class TestLWWRegDelta is UnitTest
     h.assert_eq[U64](b.timestamp(), 2)
     h.assert_eq[U64](c.timestamp(), 1)
     
-    a.>converge(b).>converge(c)
-    b.>converge(c).>converge(a)
-    c.>converge(a).>converge(b)
+    h.assert_false(a.converge(b))
+    h.assert_false(a.converge(c))
+    h.assert_false(b.converge(c))
+    h.assert_true(b.converge(a))
+    h.assert_true(c.converge(a))
+    h.assert_false(c.converge(b))
     
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "apple")
@@ -88,9 +97,12 @@ class TestLWWRegDelta is UnitTest
     h.assert_eq[U64](b.timestamp(), 5)
     h.assert_eq[U64](c.timestamp(), 5)
     
-    a.>converge(b_delta).>converge(c_delta)
-    b.>converge(c_delta).>converge(a_delta)
-    c.>converge(a_delta).>converge(b_delta)
+    h.assert_true(a.converge(b_delta))
+    h.assert_true(a.converge(c_delta))
+    h.assert_true(b.converge(c_delta))
+    h.assert_false(b.converge(a_delta))
+    h.assert_false(c.converge(a_delta))
+    h.assert_false(c.converge(b_delta))
     
     h.assert_eq[String](a.value(), "currant")
     h.assert_eq[String](b.value(), "currant")

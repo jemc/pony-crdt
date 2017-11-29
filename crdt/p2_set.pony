@@ -98,13 +98,17 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     end
     consume delta'
   
-  fun ref converge(that: P2HashSet[A, H] box) =>
+  fun ref converge(that: P2HashSet[A, H] box): Bool =>
     """
     Converge from the given P2Set into this one.
     For this data type, the convergence is the union of both constituent sets.
+    Returns true if the convergence added new information to the data structure.
     """
+    let orig_size = _ins.size() + _del.size()
+    // TODO: deal with cases where we want _ins to be deleted.
     _ins.union(that._ins.values())
     _del.union(that._del.values())
+    orig_size != (_ins.size() + _del.size())
   
   fun result(): std.HashSet[A, H] =>
     """

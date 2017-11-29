@@ -65,12 +65,15 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     end
     delta
   
-  fun ref converge(that: GHashSet[A, H] box) =>
+  fun ref converge(that: GHashSet[A, H] box): Bool =>
     """
     Converge from the given GSet into this one.
     For this data type, the convergence is a simple union.
+    Returns true if the convergence added new information to the data structure.
     """
+    let orig_size = _data.size()
     union(that._data.values())
+    orig_size != _data.size()
   
   fun string(): String iso^ =>
     """

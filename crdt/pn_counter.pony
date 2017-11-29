@@ -79,17 +79,28 @@ class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     end
     consume delta'
   
-  fun ref converge(that: PNCounter[A] box) =>
+  fun ref converge(that: PNCounter[A] box): Bool =>
     """
     Converge from the given PNCounter into this one.
     We converge the positive and negative counters, pairwise.
+    Returns true if the convergence added new information to the data structure.
     """
+    var changed = false
     for (id, value') in that._pos.pairs() do
-      try _pos.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
+      // TODO: introduce a stateful upsert in ponyc Map?
+      if try value' > _pos(id)? else true end then
+        _pos(id) = value'
+        changed = true
+      end
     end
     for (id, value') in that._neg.pairs() do
-      try _neg.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
+      // TODO: introduce a stateful upsert in ponyc Map?
+      if try value' > _neg(id)? else true end then
+        _neg(id) = value'
+        changed = true
+      end
     end
+    changed
   
   fun string(): String iso^ =>
     """

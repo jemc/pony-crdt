@@ -65,14 +65,21 @@ class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
     end
     consume delta'
   
-  fun ref converge(that: GCounter[A] box) =>
+  fun ref converge(that: GCounter[A] box): Bool =>
     """
     Converge from the given GCounter into this one.
     For each replica state, we select the maximum value seen so far (grow-only).
+    Returns true if the convergence added new information to the data structure.
     """
+    var changed = false
     for (id, value') in that._data.pairs() do
-      try _data.upsert(id, value', {(v: A, value': A): A => v.max(value') })? end
+      // TODO: introduce a stateful upsert in ponyc Map?
+      if try value' > _data(id)? else true end then
+        _data(id) = value'
+        changed = true
+      end
     end
+    changed
   
   fun string(): String iso^ =>
     """

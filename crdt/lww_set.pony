@@ -76,25 +76,33 @@ class ref LWWHashSet[
     """
     _data.contains(value) and (try _data(value)? else return false end)._2
   
-  fun ref _set_no_delta(value: A, timestamp: T) =>
+  fun ref _set_no_delta(value: A, timestamp: T): Bool =>
     try
-      (let current_timestamp, let _) = _data(value)?
-      if timestamp < current_timestamp then return end
+      (let current_timestamp, let current_status) = _data(value)?
+      if timestamp < current_timestamp then return false end
       iftype B <: BiasDelete then
-        if (timestamp == current_timestamp) then return end
+        if (timestamp == current_timestamp) then return false end
+      end
+      if (timestamp == current_timestamp) and (current_status == true) then
+        return false
       end
     end
     _data(value) = (timestamp, true)
+    true
   
-  fun ref _unset_no_delta(value: box->A!, timestamp: T) =>
+  fun ref _unset_no_delta(value: box->A!, timestamp: T): Bool =>
     try
-      (let current_timestamp, let _) = _data(value)?
-      if timestamp < current_timestamp then return end
+      (let current_timestamp, let current_status) = _data(value)?
+      if timestamp < current_timestamp then return false end
       iftype B <: BiasInsert then
-        if (timestamp == current_timestamp) then return end
+        if (timestamp == current_timestamp) then return false end
+      end
+      if (timestamp == current_timestamp) and (current_status == false) then
+        return false
       end
     end
     _data(value) = (timestamp, false)
+    true
   
   fun ref clear[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
     timestamp: T,
@@ -159,17 +167,22 @@ class ref LWWHashSet[
     end
     consume delta
   
-  fun ref converge(that: LWWHashSet[A, T, B, H] box) =>
+  fun ref converge(that: LWWHashSet[A, T, B, H] box): Bool =>
     """
     Converge from the given LWWSet into this one.
     For this data type, the convergence is the union of both constituent sets.
+    Returns true if the convergence added new information to the data structure.
     """
+    var changed = false
     for (value, (timestamp, present)) in that._data.pairs() do
-      if present
-      then _set_no_delta(value, timestamp)
-      else _unset_no_delta(value, timestamp)
-      end
+      let this_value_changed =
+        if present
+        then _set_no_delta(value, timestamp)
+        else _unset_no_delta(value, timestamp)
+        end
+      changed = changed or this_value_changed
     end
+    changed
   
   fun result(): std.HashSet[A, H] =>
     """

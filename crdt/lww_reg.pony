@@ -48,7 +48,7 @@ class ref LWWReg[
     """
     _timestamp
   
-  fun ref _update_no_delta(value': A, timestamp': T) =>
+  fun ref _update_no_delta(value': A, timestamp': T): Bool =>
     if
       (timestamp' > _timestamp) or (
         (timestamp' == _timestamp)
@@ -61,6 +61,9 @@ class ref LWWReg[
     then
       _value     = value'
       _timestamp = timestamp'
+      true
+    else
+      false
     end
   
   fun ref update[D: LWWReg[A, T, B] ref = LWWReg[A, T, B]](
@@ -84,10 +87,11 @@ class ref LWWReg[
       recover LWWReg[A, T, B](value', timestamp') end
     end
   
-  fun ref converge(that: LWWReg[A, T, B] box) =>
+  fun ref converge(that: LWWReg[A, T, B] box): Bool =>
     """
     Converge from the given LWWReg into this one.
     For this data type, the convergence is a simple update operation.
+    Returns true if the convergence added new information to the data structure.
     """
     _update_no_delta(that.value(), that.timestamp())
   

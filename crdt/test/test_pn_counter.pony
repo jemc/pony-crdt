@@ -21,9 +21,14 @@ class TestPNCounter is UnitTest
     h.assert_ne[PNCounter](b, c)
     h.assert_ne[PNCounter](c, a)
     
-    a.>converge(b).>converge(c)
-    b.>converge(c).>converge(a)
-    c.>converge(a).>converge(b)
+    h.assert_false(a.converge(a))
+    
+    h.assert_true(a.converge(b))
+    h.assert_true(a.converge(c))
+    h.assert_true(b.converge(c))
+    h.assert_true(b.converge(a))
+    h.assert_true(c.converge(a))
+    h.assert_false(c.converge(b))
     
     h.assert_eq[U64](a.value(), 2)
     h.assert_eq[U64](b.value(), 2)
@@ -43,9 +48,12 @@ class TestPNCounter is UnitTest
     h.assert_ne[PNCounter](b, c)
     h.assert_ne[PNCounter](c, a)
     
-    a.>converge(b).>converge(c)
-    b.>converge(c).>converge(a)
-    c.>converge(a).>converge(b)
+    h.assert_true(a.converge(b))
+    h.assert_true(a.converge(c))
+    h.assert_true(b.converge(c))
+    h.assert_true(b.converge(a))
+    h.assert_true(c.converge(a))
+    h.assert_false(c.converge(b))
     
     h.assert_eq[U64](a.value(), 12)
     h.assert_eq[U64](b.value(), 12)
@@ -74,9 +82,14 @@ class TestPNCounterDelta is UnitTest
     h.assert_ne[PNCounter](b, c)
     h.assert_ne[PNCounter](c, a)
     
-    a.>converge(b_delta).>converge(c_delta)
-    b.>converge(c_delta).>converge(a_delta)
-    c.>converge(a_delta).>converge(b_delta)
+    h.assert_false(a.converge(a_delta))
+    
+    h.assert_true(a.converge(b_delta))
+    h.assert_true(a.converge(c_delta))
+    h.assert_true(b.converge(c_delta))
+    h.assert_true(b.converge(a_delta))
+    h.assert_true(c.converge(a_delta))
+    h.assert_true(c.converge(b_delta))
     
     h.assert_eq[U64](a.value(), 2)
     h.assert_eq[U64](b.value(), 2)
@@ -96,9 +109,12 @@ class TestPNCounterDelta is UnitTest
     h.assert_ne[PNCounter](b, c)
     h.assert_ne[PNCounter](c, a)
     
-    a.>converge(b_delta).>converge(c_delta)
-    b.>converge(c_delta).>converge(a_delta)
-    c.>converge(a_delta).>converge(b_delta)
+    h.assert_true(a.converge(b_delta))
+    h.assert_true(a.converge(c_delta))
+    h.assert_true(b.converge(c_delta))
+    h.assert_true(b.converge(a_delta))
+    h.assert_true(c.converge(a_delta))
+    h.assert_true(c.converge(b_delta))
     
     h.assert_eq[U64](a.value(), 12)
     h.assert_eq[U64](b.value(), 12)
