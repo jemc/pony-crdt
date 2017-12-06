@@ -1,6 +1,6 @@
 use "collections"
 
-class ref PNCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
+class ref PNCounter[A: I64 val = I64] // TODO: allow any integer?
   is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]])
   """
   A mutable counter, which can be both increased and decreased.
