@@ -1,6 +1,6 @@
 use "collections"
 
-class ref PNCounter[A: (Integer[A] val & Int) = U64]
+class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
   is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]])
   """
   A mutable counter, which can be both increased and decreased.
