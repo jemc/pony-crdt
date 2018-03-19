@@ -8,46 +8,46 @@ class ref LWWReg[
   That is, every update operation includes a logical timestamp (U64 by default,
   though it may be any Comparable immutable type), and update operationss are
   overridden only by those with a higher logical timestamp.
-  
+
   This implies that the timestamps must be correct (or at least logically so)
   in order for the last-write-wins semantics to hold true.
-  
+
   If the logical timestamp is equal for two compared operations, the tie will
   be broken by the bias type parameter. BiasGreater implies that the greater of
   the two compared values will be chosen, while BiasLesser implies the opposite.
   The default bias is BiasGreater.
-  
+
   Because there is an order-independent way of comparing both the timestamp and
   the value term of all update operations, all conflicts can be resolved in a
   commutative way; thus, the result is eventually consistent in all replicas.
   The same bias must be used on all replicas for tie results to be consistent.
-  
+
   All mutator methods accept and return a convergent delta-state.
   """
   var _value: A
   var _timestamp: T
-  
+
   new ref create(value': A, timestamp': T) =>
     (_value, _timestamp) = (value', timestamp')
-  
+
   fun apply(): A =>
     """
     Return the current value of the register.
     """
     _value
-  
+
   fun value(): A =>
     """
     Return the current value of the register.
     """
     _value
-  
+
   fun timestamp(): T =>
     """
     Return the latest timestamp of the register.
     """
     _timestamp
-  
+
   fun ref _update_no_delta(value': A, timestamp': T): Bool =>
     if
       (timestamp' > _timestamp) or (
@@ -65,7 +65,7 @@ class ref LWWReg[
     else
       false
     end
-  
+
   fun ref update[D: LWWReg[A, T, B] ref = LWWReg[A, T, B]](
     value': A,
     timestamp': T,
@@ -78,7 +78,7 @@ class ref LWWReg[
     Accepts and returns a convergent delta-state.
     """
     _update_no_delta(value', timestamp')
-    
+
     match consume delta'
     | let delta: D =>
       delta._update_no_delta(value', timestamp')
@@ -86,7 +86,7 @@ class ref LWWReg[
     else
       recover LWWReg[A, T, B](value', timestamp') end
     end
-  
+
   fun ref converge(that: LWWReg[A, T, B] box): Bool =>
     """
     Converge from the given LWWReg into this one.
@@ -94,7 +94,7 @@ class ref LWWReg[
     Returns true if the convergence added new information to the data structure.
     """
     _update_no_delta(that.value(), that.timestamp())
-  
+
   fun string(): String iso^ =>
     """
     Return a best effort at printing the register. If A is Stringable, use
@@ -116,7 +116,7 @@ class ref LWWReg[
     end
     buf.push(')')
     consume buf
-  
+
   fun eq(that: LWWReg[A, T, B] box): Bool => value().eq(that.value())
   fun ne(that: LWWReg[A, T, B] box): Bool => value().ne(that.value())
   fun lt(that: LWWReg[A, T, B] box): Bool => value().lt(that.value())
