@@ -8,37 +8,37 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
   is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]])
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
-  
+
   Because the set is unordered and elements can only be added (never deleted),
   the results are eventually consistent when converged.
-  
+
   All mutator methods accept and return a convergent delta-state.
   """
   embed _data: std.HashSet[A, H]
-  
+
   new ref create() =>
     _data = std.HashSet[A, H]
-  
+
   fun ref _data_set(value: A) => _data.set(value)
-  
+
   fun size(): USize =>
     """
     Return the number of items in the set.
     """
     _data.size()
-  
+
   fun apply(value: val->A): val->A ? =>
     """
     Return the value if it's in the set, otherwise raise an error.
     """
     _data(value)?
-  
+
   fun contains(value: val->A): Bool =>
     """
     Check whether the set contains the given value.
     """
     _data.contains(value)
-  
+
   fun ref set[D: GHashSet[A, H] ref = GHashSet[A, H]](
     value: A,
     delta: D = recover GHashSet[A, H] end)
@@ -50,7 +50,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     _data.set(value)
     delta._data_set(value)
     delta
-  
+
   fun ref union[D: GHashSet[A, H] ref = GHashSet[A, H]](
     that: Iterator[A],
     delta: D = recover GHashSet[A, H] end)
@@ -64,7 +64,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
       delta._data_set(value)
     end
     delta
-  
+
   fun ref converge(that: GHashSet[A, H] box): Bool =>
     """
     Converge from the given GSet into this one.
@@ -74,7 +74,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     let orig_size = _data.size()
     union(that._data.values())
     orig_size != _data.size()
-  
+
   fun string(): String iso^ =>
     """
     Return a best effort at printing the set. If A is a Stringable, use the
@@ -94,7 +94,7 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
     end
     buf.push('}')
     consume buf
-  
+
   fun eq(that: GHashSet[A, H] box): Bool => _data.eq(that._data)
   fun ne(that: GHashSet[A, H] box): Bool => _data.ne(that._data)
   fun lt(that: GHashSet[A, H] box): Bool => _data.lt(that._data)
