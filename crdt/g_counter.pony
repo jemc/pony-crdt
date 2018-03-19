@@ -1,6 +1,6 @@
 use "collections"
 
-class ref GCounter[A: U64 val = U64] // TODO: allow any unsigned integer?
+class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   is (Comparable[GCounter[A]] & Convergent[GCounter[A]])
   """
   A mutable grow-only counter. That is, the value can only be increased.
