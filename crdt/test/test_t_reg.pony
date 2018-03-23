@@ -1,14 +1,14 @@
 use "ponytest"
 use ".."
 
-class TestLWWReg is UnitTest
+class TestTReg is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.LWWReg"
+  fun name(): String => "crdt.TReg"
 
   fun apply(h: TestHelper) =>
-    let a = LWWReg[String]("apple", 3)
-    let b = LWWReg[String]("banana", 2)
-    let c = LWWReg[String]("currant", 1)
+    let a = TReg[String]("apple", 3)
+    let b = TReg[String]("banana", 2)
+    let c = TReg[String]("currant", 1)
 
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "banana")
@@ -56,14 +56,14 @@ class TestLWWReg is UnitTest
     h.assert_eq[U64](b.timestamp(), 5)
     h.assert_eq[U64](c.timestamp(), 5)
 
-class TestLWWRegDelta is UnitTest
+class TestTRegDelta is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.LWWReg (ẟ)"
+  fun name(): String => "crdt.TReg (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = LWWReg[String]("apple", 3)
-    let b = LWWReg[String]("banana", 2)
-    let c = LWWReg[String]("currant", 1)
+    let a = TReg[String]("apple", 3)
+    let b = TReg[String]("banana", 2)
+    let c = TReg[String]("currant", 1)
 
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "banana")

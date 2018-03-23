@@ -1,14 +1,14 @@
 use "ponytest"
 use ".."
 
-class TestLWWSet is UnitTest
+class TestTSet is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.LWWSet"
+  fun name(): String => "crdt.TSet"
 
   fun apply(h: TestHelper) =>
-    let a = LWWSet[String]
-    let b = LWWSet[String]
-    let c = LWWSet[String]
+    let a = TSet[String]
+    let b = TSet[String]
+    let c = TSet[String]
 
     a.set("apple", 5)
     b.set("banana", 5)
@@ -17,9 +17,9 @@ class TestLWWSet is UnitTest
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
     h.assert_eq[USize](c.size(), 1)
-    h.assert_ne[LWWSet[String]](a, b)
-    h.assert_ne[LWWSet[String]](b, c)
-    h.assert_ne[LWWSet[String]](c, a)
+    h.assert_ne[TSet[String]](a, b)
+    h.assert_ne[TSet[String]](b, c)
+    h.assert_ne[TSet[String]](c, a)
 
     h.assert_false(a.converge(a))
 
@@ -33,9 +33,9 @@ class TestLWWSet is UnitTest
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
     h.assert_eq[USize](c.size(), 3)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c.unset("currant", 6)
     h.assert_true(a.converge(c))
@@ -44,9 +44,9 @@ class TestLWWSet is UnitTest
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
     h.assert_eq[USize](c.size(), 2)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c.unset("banana", 4)
     c.unset("apple", 5)
@@ -56,9 +56,9 @@ class TestLWWSet is UnitTest
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
     h.assert_eq[USize](c.size(), 2)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c.unset("banana", 7)
     c.unset("apple", 8)
@@ -68,18 +68,18 @@ class TestLWWSet is UnitTest
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)
     h.assert_eq[USize](c.size(), 0)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
-class TestLWWSetDelta is UnitTest
+class TestTSetDelta is UnitTest
   new iso create() => None
-  fun name(): String => "crdt.LWWSet (ẟ)"
+  fun name(): String => "crdt.TSet (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = LWWSet[String]
-    let b = LWWSet[String]
-    let c = LWWSet[String]
+    let a = TSet[String]
+    let b = TSet[String]
+    let c = TSet[String]
 
     var a_delta = a.set("apple", 5)
     var b_delta = b.set("banana", 5)
@@ -88,9 +88,9 @@ class TestLWWSetDelta is UnitTest
     h.assert_eq[USize](a.size(), 1)
     h.assert_eq[USize](b.size(), 1)
     h.assert_eq[USize](c.size(), 1)
-    h.assert_ne[LWWSet[String]](a, b)
-    h.assert_ne[LWWSet[String]](b, c)
-    h.assert_ne[LWWSet[String]](c, a)
+    h.assert_ne[TSet[String]](a, b)
+    h.assert_ne[TSet[String]](b, c)
+    h.assert_ne[TSet[String]](c, a)
 
     h.assert_false(a.converge(a_delta))
 
@@ -104,9 +104,9 @@ class TestLWWSetDelta is UnitTest
     h.assert_eq[USize](a.size(), 3)
     h.assert_eq[USize](b.size(), 3)
     h.assert_eq[USize](c.size(), 3)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c_delta = c.unset("currant", 6)
     h.assert_true(a.converge(c_delta))
@@ -115,9 +115,9 @@ class TestLWWSetDelta is UnitTest
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
     h.assert_eq[USize](c.size(), 2)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c_delta = c.unset("banana", 4)
     c_delta = c.unset("apple", 5, consume c_delta)
@@ -127,9 +127,9 @@ class TestLWWSetDelta is UnitTest
     h.assert_eq[USize](a.size(), 2)
     h.assert_eq[USize](b.size(), 2)
     h.assert_eq[USize](c.size(), 2)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)
 
     c_delta = c.unset("banana", 7)
     c_delta = c.unset("apple", 8, consume c_delta)
@@ -139,6 +139,6 @@ class TestLWWSetDelta is UnitTest
     h.assert_eq[USize](a.size(), 0)
     h.assert_eq[USize](b.size(), 0)
     h.assert_eq[USize](c.size(), 0)
-    h.assert_eq[LWWSet[String]](a, b)
-    h.assert_eq[LWWSet[String]](b, c)
-    h.assert_eq[LWWSet[String]](c, a)
+    h.assert_eq[TSet[String]](a, b)
+    h.assert_eq[TSet[String]](b, c)
+    h.assert_eq[TSet[String]](c, a)

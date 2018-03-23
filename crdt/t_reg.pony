@@ -1,8 +1,8 @@
-class ref LWWReg[
+class ref TReg[
   A: Comparable[A] val,
   T: Comparable[T] val = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[LWWReg[A, T, B]] & Convergent[LWWReg[A, T, B]])
+  is (Equatable[TReg[A, T, B]] & Convergent[TReg[A, T, B]])
   """
   A mutable register with last-write-wins semantics for updating the value.
   That is, every update operation includes a logical timestamp (U64 by default,
@@ -66,7 +66,7 @@ class ref LWWReg[
       false
     end
 
-  fun ref update[D: LWWReg[A, T, B] ref = LWWReg[A, T, B]](
+  fun ref update[D: TReg[A, T, B] ref = TReg[A, T, B]](
     value': A,
     timestamp': T,
     delta': (D | None) = None)
@@ -84,12 +84,12 @@ class ref LWWReg[
       delta._update_no_delta(value', timestamp')
       consume delta
     else
-      recover LWWReg[A, T, B](value', timestamp') end
+      recover TReg[A, T, B](value', timestamp') end
     end
 
-  fun ref converge(that: LWWReg[A, T, B] box): Bool =>
+  fun ref converge(that: TReg[A, T, B] box): Bool =>
     """
-    Converge from the given LWWReg into this one.
+    Converge from the given TReg into this one.
     For this data type, the convergence is a simple update operation.
     Returns true if the convergence added new information to the data structure.
     """
@@ -117,9 +117,9 @@ class ref LWWReg[
     buf.push(')')
     consume buf
 
-  fun eq(that: LWWReg[A, T, B] box): Bool => value().eq(that.value())
-  fun ne(that: LWWReg[A, T, B] box): Bool => value().ne(that.value())
-  fun lt(that: LWWReg[A, T, B] box): Bool => value().lt(that.value())
-  fun le(that: LWWReg[A, T, B] box): Bool => value().le(that.value())
-  fun gt(that: LWWReg[A, T, B] box): Bool => value().gt(that.value())
-  fun ge(that: LWWReg[A, T, B] box): Bool => value().ge(that.value())
+  fun eq(that: TReg[A, T, B] box): Bool => value().eq(that.value())
+  fun ne(that: TReg[A, T, B] box): Bool => value().ne(that.value())
+  fun lt(that: TReg[A, T, B] box): Bool => value().lt(that.value())
+  fun le(that: TReg[A, T, B] box): Bool => value().le(that.value())
+  fun gt(that: TReg[A, T, B] box): Bool => value().gt(that.value())
+  fun ge(that: TReg[A, T, B] box): Bool => value().ge(that.value())

@@ -1,25 +1,25 @@
 use std = "collections"
 
-type LWWSet[
+type TSet[
   A: (std.Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is LWWHashSet[A, T, B, std.HashEq[A]]
+  is THashSet[A, T, B, std.HashEq[A]]
 
-type LWWSetIs[
+type TSetIs[
   A: (std.Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is LWWHashSet[A, T, B, std.HashIs[A]]
+  is THashSet[A, T, B, std.HashIs[A]]
 
-class ref LWWHashSet[
+class ref THashSet[
   A: Any #share,
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
   H: std.HashFunction[A] val]
   is
-  ( Comparable[LWWHashSet[A, T, B, H]]
-  & Convergent[LWWHashSet[A, T, B, H]] )
+  ( Comparable[THashSet[A, T, B, H]]
+  & Convergent[THashSet[A, T, B, H]] )
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -104,9 +104,9 @@ class ref LWWHashSet[
     _data(value) = (timestamp, false)
     true
 
-  fun ref clear[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
+  fun ref clear[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
     timestamp: T,
-    delta: D = recover LWWHashSet[A, T, B, H] end)
+    delta: D = recover THashSet[A, T, B, H] end)
   : D^ =>
     """
     Remove all elements from the set.
@@ -127,10 +127,10 @@ class ref LWWHashSet[
     end
     consume delta
 
-  fun ref set[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
+  fun ref set[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
     value: A,
     timestamp: T,
-    delta: D = recover LWWHashSet[A, T, B, H] end)
+    delta: D = recover THashSet[A, T, B, H] end)
   : D^ =>
     """
     Add a value to the set.
@@ -140,10 +140,10 @@ class ref LWWHashSet[
     delta._set_no_delta(value, timestamp)
     consume delta
 
-  fun ref unset[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
+  fun ref unset[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
     value: box->A!,
     timestamp: T,
-    delta: D = recover LWWHashSet[A, T, B, H] end)
+    delta: D = recover THashSet[A, T, B, H] end)
   : D^ =>
     """
     Remove a value from the set.
@@ -153,9 +153,9 @@ class ref LWWHashSet[
     delta._unset_no_delta(value, timestamp)
     consume delta
 
-  fun ref union[D: LWWHashSet[A, T, B, H] ref = LWWHashSet[A, T, B, H]](
+  fun ref union[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
     that: Iterator[(A, T)],
-    delta: D = recover LWWHashSet[A, T, B, H] end)
+    delta: D = recover THashSet[A, T, B, H] end)
   : D^ =>
     """
     Add everything in the given iterator to the set.
@@ -167,9 +167,9 @@ class ref LWWHashSet[
     end
     consume delta
 
-  fun ref converge(that: LWWHashSet[A, T, B, H] box): Bool =>
+  fun ref converge(that: THashSet[A, T, B, H] box): Bool =>
     """
-    Converge from the given LWWSet into this one.
+    Converge from the given TSet into this one.
     For this data type, the convergence is the union of both constituent sets.
     Returns true if the convergence added new information to the data structure.
     """
@@ -235,12 +235,12 @@ class ref LWWHashSet[
     buf.push('}')
     consume buf
 
-  fun eq(that: LWWHashSet[A, T, B, H] box): Bool => result().eq(that.result())
-  fun ne(that: LWWHashSet[A, T, B, H] box): Bool => result().ne(that.result())
-  fun lt(that: LWWHashSet[A, T, B, H] box): Bool => result().lt(that.result())
-  fun le(that: LWWHashSet[A, T, B, H] box): Bool => result().le(that.result())
-  fun gt(that: LWWHashSet[A, T, B, H] box): Bool => result().gt(that.result())
-  fun ge(that: LWWHashSet[A, T, B, H] box): Bool => result().ge(that.result())
+  fun eq(that: THashSet[A, T, B, H] box): Bool => result().eq(that.result())
+  fun ne(that: THashSet[A, T, B, H] box): Bool => result().ne(that.result())
+  fun lt(that: THashSet[A, T, B, H] box): Bool => result().lt(that.result())
+  fun le(that: THashSet[A, T, B, H] box): Bool => result().le(that.result())
+  fun gt(that: THashSet[A, T, B, H] box): Bool => result().gt(that.result())
+  fun ge(that: THashSet[A, T, B, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^     => result().values()
   fun timestamps(): Iterator[T]^ => map().values()
   fun pairs(): Iterator[(A, T)]^ => map().pairs()
