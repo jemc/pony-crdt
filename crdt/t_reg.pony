@@ -97,8 +97,8 @@ class ref TReg[
 
   fun string(): String iso^ =>
     """
-    Return a best effort at printing the register. If A is Stringable, use
-    the string representation of the value; otherwise print as a question mark.
+    Return a best effort at printing the log. If A and T are Stringable, use
+    the string representation of them; otherwise print as question marks.
     """
     let buf = recover String(8) end
     buf.push('%')
@@ -109,8 +109,8 @@ class ref TReg[
       buf.push('?')
     end
     buf .> push(',').push(' ')
-    iftype A <: Stringable val then
-      buf.append(value().string())
+    iftype T <: Stringable val then
+      buf.append(timestamp().string())
     else
       buf.push('?')
     end
