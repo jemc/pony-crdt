@@ -4,7 +4,6 @@ actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
-    // TODO: add randomized testing of delta-convergence for all data types.
     test(TestGSet)
     test(TestGSetDelta)
     test(TestP2Set)
@@ -19,3 +18,9 @@ actor Main is TestList
     test(TestGCounterDelta)
     test(TestPNCounter)
     test(TestPNCounterDelta)
+    test(TestCCounter)
+    test(TestCCounterDelta)
+    test(TestAWORSet)
+    test(TestAWORSetDelta)
+    test(TestRWORSet)
+    test(TestRWORSetDelta)
