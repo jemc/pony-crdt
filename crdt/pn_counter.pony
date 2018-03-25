@@ -21,17 +21,17 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: U64
-  embed _pos: Map[U64, A]
-  embed _neg: Map[U64, A]
+  let _id: ID
+  embed _pos: Map[ID, A]
+  embed _neg: Map[ID, A]
 
-  new ref create(id': U64) =>
+  new ref create(id': ID) =>
     """
     Instantiate the PNCounter under the given unique replica id.
     """
     _id  = id'
-    _pos = Map[U64, A]
-    _neg = Map[U64, A]
+    _pos = Map[ID, A]
+    _neg = Map[ID, A]
 
   fun apply(): A =>
     """
@@ -48,8 +48,8 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     for v in _neg.values() do sum = sum - v end
     sum
 
-  fun ref _pos_update(id': U64, value': A) => _pos(id') = value'
-  fun ref _neg_update(id': U64, value': A) => _neg(id') = value'
+  fun ref _pos_update(id': ID, value': A) => _pos(id') = value'
+  fun ref _neg_update(id': ID, value': A) => _neg(id') = value'
 
   fun ref increment[D: PNCounter[A] ref = PNCounter[A]](
     value': A = 1,

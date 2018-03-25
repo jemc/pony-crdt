@@ -25,15 +25,15 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: U64
-  embed _data: Map[U64, A]
+  let _id: ID
+  embed _data: Map[ID, A]
 
-  new ref create(id': U64) =>
+  new ref create(id': ID) =>
     """
     Instantiate the GCounter under the given unique replica id.
     """
     _id   = id'
-    _data = Map[U64, A]
+    _data = Map[ID, A]
 
   fun apply(): A =>
     """
@@ -49,7 +49,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     for v in _data.values() do sum = sum + v end
     sum
 
-  fun ref _data_update(id': U64, value': A) => _data(id') = value'
+  fun ref _data_update(id': ID, value': A) => _data(id') = value'
 
   fun ref increment[D: GCounter[A] ref = GCounter[A]](
     value': A = 1,
