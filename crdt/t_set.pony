@@ -235,6 +235,7 @@ class ref THashSet[
     buf.push('}')
     consume buf
 
+  // TODO: optimize comparison functions:
   fun eq(that: THashSet[A, T, B, H] box): Bool => result().eq(that.result())
   fun ne(that: THashSet[A, T, B, H] box): Bool => result().ne(that.result())
   fun lt(that: THashSet[A, T, B, H] box): Bool => result().lt(that.result())

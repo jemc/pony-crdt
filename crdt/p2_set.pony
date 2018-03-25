@@ -138,6 +138,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     buf.push('}')
     consume buf
 
+  // TODO: optimize comparison functions:
   fun eq(that: P2HashSet[A, H] box): Bool => result().eq(that.result())
   fun ne(that: P2HashSet[A, H] box): Bool => result().ne(that.result())
   fun lt(that: P2HashSet[A, H] box): Bool => result().lt(that.result())
