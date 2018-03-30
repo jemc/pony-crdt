@@ -1,6 +1,5 @@
 use "ponytest"
 use ".."
-use "debug"
 
 class TestTLog is UnitTest
   new iso create() => None

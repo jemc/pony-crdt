@@ -1,5 +1,3 @@
-use "debug"
-
 class ref TLog[
   A: Comparable[A] val,
   T: Comparable[T] val = U64,
