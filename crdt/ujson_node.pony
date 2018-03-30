@@ -29,7 +29,7 @@ class UJSONNode is Equatable[UJSONNode]
   new ref create() => None
 
   new ref from_string(s: String box, errs: Array[String] = [])? =>
-    _UJSONParse.into(this, s, errs)?
+    UJSONParse._into(this, s, errs)?
 
   fun ref put(value': UJSONValue) => _here.set(value')
 

@@ -1,8 +1,8 @@
 use "debug"
 
-primitive _UJSONParse
-  fun into(node: UJSONNode, source: String box, errs: Array[String])? =>
-    let builder = _UJSONNodeBuilder([], node)
+primitive UJSONParse
+  fun _into(node': UJSONNode, source: String box, errs: Array[String])? =>
+    let builder = _UJSONNodeBuilder([], node')
     let parser  = _UJSONParser
     try
       parser.parse(source, {(path, value)(builder) =>
@@ -15,6 +15,22 @@ primitive _UJSONParse
       errs.push(parser.describe_error())
       error
     end
+
+  fun value(source: String box, errs: Array[String] = []): UJSONValue? =>
+    let register = Array[UJSONValue]
+    let parser   = _UJSONParser
+    try
+      parser.parse(source, {(_, value)(register) => register.push(value) })?
+      register.pop()?
+    else
+      errs.push(parser.describe_error())
+      error
+    end
+
+  fun node(source: String box, errs: Array[String] = []): UJSONNode? =>
+    let out = UJSONNode
+    _into(out, source, errs)?
+    out
 
 class _UJSONParser
   var _source: String box = ""
@@ -31,6 +47,15 @@ class _UJSONParser
     (_source, _fn) = (source', fn')
     if detect_empty() then return end
     emit_data()?
+    verify_final()?
+
+  fun ref parse_single(
+    source': String box,
+    fn': {ref(Array[String] box, UJSONValue)} ref)
+  ? =>
+    (_source, _fn) = (source', fn')
+    if detect_empty() then return end
+    emit_data_single()?
     verify_final()?
 
   fun describe_error(): String =>
@@ -79,6 +104,18 @@ class _UJSONParser
     | '"' => emit_string()?
     | '{' => emit_map()?
     | '[' => emit_set()?
+    | '-' => advance(); emit(read_number(-1)?)
+    | let b: U8 if (b >= '0') and (b <= '9') => emit(read_number()?)
+    else error
+    end
+
+  fun ref emit_data_single()? =>
+    skip_whitespace()
+    match peek()?
+    | 'n' => advance(); eat('u')?; eat('l')?; eat('l')?;            emit(None)
+    | 't' => advance(); eat('r')?; eat('u')?; eat('e')?;            emit(true)
+    | 'f' => advance(); eat('a')?; eat('l')?; eat('s')?; eat('e')?; emit(false)
+    | '"' => emit_string()?
     | '-' => advance(); emit(read_number(-1)?)
     | let b: U8 if (b >= '0') and (b <= '9') => emit(read_number()?)
     else error
