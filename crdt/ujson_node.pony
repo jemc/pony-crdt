@@ -50,4 +50,14 @@ class UJSONNode is Equatable[UJSONNode]
     end
     true
 
+  fun _flat_each(
+    path: Array[String] val,
+    fn: {ref(Array[String] val, UJSONValue)} ref)
+  =>
+    for value in _here.values() do fn(path, value) end
+
+    for (key, node) in _next.pairs() do
+      node._flat_each(recover path.clone().>push(key) end, fn)
+    end
+
   fun string(): String iso^ => _UJSONShow.show_node(recover String end, this)

@@ -32,6 +32,10 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
   """
   embed _kernel: DotKernel[(Array[String] val, UJSONValue)]
 
+  // TODO: Fix ponyc to allow getting private fields from a lambda in this type,
+  // then remove this workaround method.
+  fun _get_kernel(): this->DotKernel[(Array[String] val, UJSONValue)] => _kernel
+
   new ref create(id: ID) =>
     """
     Instantiate under the given unique replica id.
@@ -47,6 +51,22 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
     let builder = _UJSONNodeBuilder(path')
     for (path, value) in _kernel.values() do builder.collect(path, value) end
     builder.root()
+
+  fun ref put[D: UJSON ref = UJSON](
+    path': Array[String] val,
+    node': UJSONNode,
+    delta': D = recover UJSON(0) end)
+  : D^ =>
+    """
+    Put a UJSONNode (all the values at and within it) at the given path.
+    All locally visible values currently at or under that path will be removed.
+    Accepts and returns a convergent delta-state.
+    """
+    _kernel.remove_value[_UJSONPathEqPrefix]((path', None), delta'._kernel)
+    node'._flat_each(path', {(path, value)(delta') =>
+      _kernel.set((path, value), delta'._get_kernel())
+    })
+    delta'
 
   fun ref update[D: UJSON ref = UJSON](
     path': Array[String] val,
