@@ -26,3 +26,4 @@ actor Main is TestList
     test(TestRWORSetDelta)
     test(TestUJSON)
     test(TestUJSONDelta)
+    test(TestUJSONNode)
