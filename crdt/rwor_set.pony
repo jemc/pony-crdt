@@ -1,13 +1,13 @@
 use "_private"
-use std = "collections"
+use "collections"
 
-type RWORSet[A: (std.Hashable val & Equatable[A])]
-  is RWORHashSet[A, std.HashEq[A]]
+type RWORSet[A: (Hashable val & Equatable[A])]
+  is RWORHashSet[A, HashEq[A]]
 
-type RWORSetIs[A: (std.Hashable val & Equatable[A])]
-  is RWORHashSet[A, std.HashIs[A]]
+type RWORSetIs[A: (Hashable val & Equatable[A])]
+  is RWORHashSet[A, HashIs[A]]
 
-class ref RWORHashSet[A: Equatable[A] val, H: std.HashFunction[A] val]
+class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
   is (Comparable[RWORHashSet[A, H]] & Convergent[RWORHashSet[A, H]])
   """
   An unordered mutable set that supports removing locally visible elements
@@ -33,7 +33,7 @@ class ref RWORHashSet[A: Equatable[A] val, H: std.HashFunction[A] val]
     """
     _kernel = DotKernel[(A, Bool)](id)
 
-  fun result(): std.HashSet[A, H] =>
+  fun result(): HashSet[A, H] =>
     """
     Return the elements of the resulting logical set as a single flat set.
     Information about specific deletions is discarded, so that the case of a
@@ -41,13 +41,13 @@ class ref RWORHashSet[A: Equatable[A] val, H: std.HashFunction[A] val]
     """
     // For each distinct value in the dot kernel, check the insert/delete tokens
     // to calculate a final boolean token, with deletes shadowing insertions.
-    let tokens = std.HashMap[A, Bool, H]
+    let tokens = HashMap[A, Bool, H]
     for (value, is_insert) in _kernel.values() do
       tokens(value) = is_insert and try tokens(value)? else true end
     end
 
     // Read the merged tokens' values into the output, counting only insertions.
-    let out = std.HashSet[A, H]
+    let out = HashSet[A, H]
     for (value, is_insert) in tokens.pairs() do
       if is_insert then out.set(value) end
     end

@@ -1,13 +1,13 @@
 use "_private"
-use std = "collections"
+use "collections"
 
-type AWORSet[A: (std.Hashable val & Equatable[A])]
-  is AWORHashSet[A, std.HashEq[A]]
+type AWORSet[A: (Hashable val & Equatable[A])]
+  is AWORHashSet[A, HashEq[A]]
 
-type AWORSetIs[A: (std.Hashable val & Equatable[A])]
-  is AWORHashSet[A, std.HashIs[A]]
+type AWORSetIs[A: (Hashable val & Equatable[A])]
+  is AWORHashSet[A, HashIs[A]]
 
-class ref AWORHashSet[A: Equatable[A] val, H: std.HashFunction[A] val]
+class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
   is (Comparable[AWORHashSet[A, H]] & Convergent[AWORHashSet[A, H]])
   """
   An unordered mutable set that supports removing locally visible elements
@@ -33,13 +33,13 @@ class ref AWORHashSet[A: Equatable[A] val, H: std.HashFunction[A] val]
     """
     _kernel = DotKernel[A](id)
 
-  fun result(): std.HashSet[A, H] =>
+  fun result(): HashSet[A, H] =>
     """
     Return the elements of the resulting logical set as a single flat set.
     Information about specific deletions is discarded, so that the case of a
     deleted element is indistinct from that of an element never inserted.
     """
-    var out = std.HashSet[A, H]
+    var out = HashSet[A, H]
     for value in _kernel.values() do out.set(value) end
     out
 

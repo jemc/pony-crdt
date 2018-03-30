@@ -1,8 +1,8 @@
-use std = "collections"
+use "collections"
 
 type UJSONValue is (None | Bool | I64 | F64 | String)
 
-primitive _UJSONValueHashFn is std.HashFunction[UJSONValue]
+primitive _UJSONValueHashFn is HashFunction[UJSONValue]
   fun hash(x': UJSONValue): U64 => digestof x'
   fun eq(x': UJSONValue, y: UJSONValue): Bool =>
     match x'

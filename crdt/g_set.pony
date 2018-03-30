@@ -1,10 +1,10 @@
-use std = "collections"
+use "collections"
 
-type GSet[A: (std.Hashable val & Equatable[A])] is GHashSet[A, std.HashEq[A]]
+type GSet[A: (Hashable val & Equatable[A])] is GHashSet[A, HashEq[A]]
 
-type GSetIs[A: Any #share] is GHashSet[A, std.HashIs[A]]
+type GSetIs[A: Any #share] is GHashSet[A, HashIs[A]]
 
-class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
+class ref GHashSet[A: Any #share, H: HashFunction[A] val]
   is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]])
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
@@ -14,10 +14,10 @@ class ref GHashSet[A: Any #share, H: std.HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: std.HashSet[A, H]
+  embed _data: HashSet[A, H]
 
   new ref create() =>
-    _data = std.HashSet[A, H]
+    _data = HashSet[A, H]
 
   fun ref _data_set(value: A) => _data.set(value)
 

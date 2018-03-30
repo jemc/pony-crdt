@@ -1,22 +1,22 @@
-use std = "collections"
+use "collections"
 
 type TSet[
-  A: (std.Hashable val & Equatable[A]),
+  A: (Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is THashSet[A, T, B, std.HashEq[A]]
+  is THashSet[A, T, B, HashEq[A]]
 
 type TSetIs[
-  A: (std.Hashable val & Equatable[A]),
+  A: (Hashable val & Equatable[A]),
   T: Comparable[T] val = U64,
   B: (BiasInsert | BiasDelete) = BiasInsert]
-  is THashSet[A, T, B, std.HashIs[A]]
+  is THashSet[A, T, B, HashIs[A]]
 
 class ref THashSet[
   A: Any #share,
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
-  H: std.HashFunction[A] val]
+  H: HashFunction[A] val]
   is
   ( Comparable[THashSet[A, T, B, H]]
   & Convergent[THashSet[A, T, B, H]] )
@@ -51,10 +51,10 @@ class ref THashSet[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: std.HashMap[A, (T, Bool), H]
+  embed _data: HashMap[A, (T, Bool), H]
 
   new ref create() =>
-    _data = std.HashMap[A, (T, Bool), H]
+    _data = HashMap[A, (T, Bool), H]
 
   fun size(): USize =>
     """
@@ -184,26 +184,26 @@ class ref THashSet[
     end
     changed
 
-  fun result(): std.HashSet[A, H] =>
+  fun result(): HashSet[A, H] =>
     """
     Return the elements of the resulting logical set as a single flat set.
     Information about specific deletions is discarded, so that the case of a
     deleted element is indistinct from that of an element never inserted.
     """
-    var out = std.HashSet[A, H]
+    var out = HashSet[A, H]
     for (value, (timestamp, present)) in _data.pairs() do
       if present then out.set(value) end
     end
     out
 
-  fun map(): std.HashMap[A, T, H] =>
+  fun map(): HashMap[A, T, H] =>
     """
     Return the elements of the resulting logical set as a single flat map, with
     the elements as keys and logical timestamps of the insertion as timestamps.
     Information about specific deletions is discarded, so that the case of a
     deleted element is indistinct from that of an element never inserted.
     """
-    var out = std.HashMap[A, T, H]
+    var out = HashMap[A, T, H]
     for (value, (timestamp, present)) in _data.pairs() do
       if present then out(value) = timestamp end
     end

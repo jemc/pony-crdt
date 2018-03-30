@@ -1,5 +1,4 @@
 use "_private"
-use std = "collections"
 
 class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
   """

@@ -1,4 +1,4 @@
-use std = "collections"
+use "collections"
 
 class _UJSONNodeBuilder
   let _path: Array[String] val
@@ -18,8 +18,8 @@ class _UJSONNodeBuilder
     node.put(value')
 
 class UJSONNode is Equatable[UJSONNode]
-  embed _here: std.HashSet[UJSONValue, _UJSONValueHashFn] = _here.create()
-  embed _next: std.Map[String, UJSONNode]                 = _next.create()
+  embed _here: HashSet[UJSONValue, _UJSONValueHashFn] = _here.create()
+  embed _next: Map[String, UJSONNode]                 = _next.create()
 
   fun _here_size(): USize => _here.size()
   fun _next_size(): USize => _next.size()

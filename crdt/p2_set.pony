@@ -1,10 +1,10 @@
-use std = "collections"
+use "collections"
 
-type P2Set[A: (std.Hashable val & Equatable[A])] is P2HashSet[A, std.HashEq[A]]
+type P2Set[A: (Hashable val & Equatable[A])] is P2HashSet[A, HashEq[A]]
 
-type P2SetIs[A: Any #share] is P2HashSet[A, std.HashIs[A]]
+type P2SetIs[A: Any #share] is P2HashSet[A, HashIs[A]]
 
-class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
+class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
   is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]])
   """
   An unordered mutable two-phase set that supports one-time removal.
@@ -21,12 +21,12 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _ins: std.HashSet[A, H]
-  embed _del: std.HashSet[A, H]
+  embed _ins: HashSet[A, H]
+  embed _del: HashSet[A, H]
 
   new ref create() =>
-    _ins = std.HashSet[A, H]
-    _del = std.HashSet[A, H]
+    _ins = HashSet[A, H]
+    _del = HashSet[A, H]
 
   fun ref _ins_set(value: A) => _ins.set(value)
   fun ref _del_set(value: A) => _del.set(value)
@@ -110,7 +110,7 @@ class ref P2HashSet[A: Any #share, H: std.HashFunction[A] val]
     _del.union(that._del.values())
     orig_size != (_ins.size() + _del.size())
 
-  fun result(): std.HashSet[A, H] =>
+  fun result(): HashSet[A, H] =>
     """
     Return the elements of the resulting logical set as a single flat set.
     Information about specific deletions is discarded, so that the case of a
