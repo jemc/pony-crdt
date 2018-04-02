@@ -1,5 +1,10 @@
 {
   "deps": [
-    { "type": "github", "repo": "jemc/pony-jason" }
+    { "type": "github", "repo": "jemc/pony-jason" },
+    {
+      "tag": "0.3.0",
+      "type": "github",
+      "repo": "mfelsche/ponycheck"
+    }
   ]
 }
