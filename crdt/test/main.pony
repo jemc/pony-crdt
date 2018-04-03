@@ -28,4 +28,5 @@ actor Main is TestList
     test(TestUJSON)
     test(TestUJSONDelta)
     test(TestUJSONNode)
+    test(Property1UnitTest[Array[_CCounterCmd]](CCounterIncProperty))
     test(Property1UnitTest[Array[_CCounterCmd]](CCounterProperty))

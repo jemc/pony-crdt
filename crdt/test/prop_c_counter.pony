@@ -28,6 +28,39 @@ class val _CCounterCmd is Stringable
         .>append(if op is _INC then "+" else "-" end + diff.string())
     end
 
+class CCounterIncProperty is Property1[Array[_CCounterCmd]]
+
+  fun name(): String => "crdt.prop.CCounter.Inc"
+
+  fun gen(): Generator[Array[_CCounterCmd]] =>
+    Generators.seq_of[_CCounterCmd, Array[_CCounterCmd]](
+      Generators.u64(0, 100).flat_map[_CCounterCmd]({(u) =>
+        Generators.unit[_CCounterCmd](_CCounterCmd(u, _INC))
+      })
+    )
+
+  fun property(commands: Array[_CCounterCmd], h: PropertyHelper) ? =>
+    var expected: U64 = 0
+    let num_replicas = (commands.size() % 10).max(2)
+    let replicas: Array[CCounter] = replicas.create(num_replicas)
+    for x in Range(0, num_replicas) do
+      replicas.push(CCounter(0))
+    end
+    let replica_iter = Iter[CCounter](replicas.values()).cycle()
+
+    for command in commands.values() do
+      h.log("executing " +  command.string(), true)
+
+      command.cc_cmd(replica_iter.next()?)
+      expected = command.u_cmd(expected)
+
+      let observer = CCounter(0)
+      for replica in replicas.values() do
+        observer.converge(replica)
+      end
+      if not h.assert_eq[U64](observer.value(), expected) then return end
+    end
+
 class CCounterProperty is Property1[Array[_CCounterCmd]]
 
   fun name(): String => "crdt.prop.CCounter"
