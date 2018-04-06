@@ -1,0 +1,5 @@
+{
+  "deps": [
+    { "type": "github", "repo": "jemc/pony-jason" }
+  ]
+}
