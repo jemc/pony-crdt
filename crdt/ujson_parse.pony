@@ -43,12 +43,12 @@ class _UJSONParserNotify is json.ParserNotify
 
   fun ref apply(parser: json.Parser, token: json.Token) =>
     match token
-    | json.TokenNull    => _fn(_path, None)
-    | json.TokenTrue    => _fn(_path, true)
-    | json.TokenFalse   => _fn(_path, false)
-    | json.TokenNumber  => _fn(_path, parser.last_number)
-    | json.TokenString  => _fn(_path, parser.last_string)
-    | json.TokenKey     => _path.push(parser.last_string)
+    | json.TokenNull     => _fn(_path, None)
+    | json.TokenTrue     => _fn(_path, true)
+    | json.TokenFalse    => _fn(_path, false)
+    | json.TokenNumber   => _fn(_path, parser.last_number)
+    | json.TokenString   => _fn(_path, parser.last_string)
+    | json.TokenKey      => _path.push(parser.last_string)
     | json.TokenPairPost => try _path.pop()? end
     end
 
