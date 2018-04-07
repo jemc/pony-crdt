@@ -1,4 +1,4 @@
-# pony-crdt
+# pony-crdt [![CircleCI](https://circleci.com/gh/jemc/pony-crdt.svg?style=shield)](https://circleci.com/gh/jemc/pony-crdt)
 
 Delta-State Convergent Replicated Data Types (ẟ-CRDTs) for the Pony language.
 
