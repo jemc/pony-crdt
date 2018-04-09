@@ -30,6 +30,6 @@ actor Main is TestList
     test(TestUJSONNode)
     test(Property1UnitTest[Array[_CmdOnReplica]](CCounterIncProperty))
     test(Property1UnitTest[Array[_CmdOnReplica]](CCounterIncDecProperty))
-    test(Property1UnitTest[Array[_CmdOnReplica[U64]]](GCounterIncProperty))
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica[U64]])](GCounterIncProperty))
     test(Property1UnitTest[Array[_CmdOnReplica[_PNCounterCmd]]](PNCounterIncProperty))
     test(Property1UnitTest[Array[_CmdOnReplica[_PNCounterCmd]]](PNCounterIncDecProperty))

@@ -8,7 +8,7 @@ type _CounterOp is (_DEC|_INC)
 
 class val _CCounterCmd is Stringable
   let u_cmd: {(U64): U64 } val
-  let cc_cmd: {(CCounter)} val
+  let cc_cmd: {(CCounter): CCounter^ } val
   let diff: U64
   let op: _CounterOp
 
@@ -34,6 +34,15 @@ class _CmdOnReplica[T = _CCounterCmd]
 
   fun replica(max: USize): USize => _replica % max
 
+  fun string(): String iso^ =>
+    let str =
+      iftype T <: Stringable #read then
+        cmd.string()
+      else
+        "digest(" + (digestof cmd).string() + ")"
+      end
+    recover String().>append(str) end
+
 trait CCounterProperty is Property1[Array[_CmdOnReplica]]
   fun property(commands: Array[_CmdOnReplica], h: PropertyHelper) ? =>
     """
@@ -47,19 +56,27 @@ trait CCounterProperty is Property1[Array[_CmdOnReplica]]
     end
 
     var expected: U64 = 0
+    let deltas = Array[CCounter](commands.size())
     for command in commands.values() do
       let cmd = command.cmd
       h.log("executing " +  cmd.string(), true)
 
-      cmd.cc_cmd(replicas(command.replica(num_replicas))?)
+      deltas.push(
+        cmd.cc_cmd(replicas(command.replica(num_replicas))?)
+      )
       expected = cmd.u_cmd(expected)
 
       let observer = CCounter(U64.max_value())
       for replica in replicas.values() do
         observer.converge(replica)
       end
-      if not h.assert_eq[U64](observer.value(), expected) then return end
+      if not h.assert_eq[U64](expected, observer.value()) then return end
     end
+    let delta_observer = CCounter(U64.max_value() - 1)
+    for delta in deltas.values() do
+      delta_observer.converge(delta)
+    end
+    h.assert_eq[U64](expected, delta_observer.value())
 
 
 class CCounterIncProperty is CCounterProperty
