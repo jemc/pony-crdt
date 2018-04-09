@@ -178,6 +178,34 @@ class ref TLog[
       recover TLog[A, T, B](_cutoff) end
     end
 
+  fun ref trim[D: TLog[A, T, B] ref = TLog[A, T, B]](
+    n': USize,
+    delta': (D | None) = None)
+  : D^ =>
+    """
+    Set the cutoff timestamp to the timestamp of the nth element, so that at
+    least n entries will be retained locally, but discarding all entries of
+    an earlier timestamp than that of the nth entry. If fewer than n' entries
+    are present, the cutoff timestamp will remain unchanged.
+    """
+    try
+      _cutoff = _values(n')?._2
+      var n = n' + 1
+      while (n = n + 1) < size() do
+        if _values(n)?._2 < _cutoff then
+          _values.truncate(n)
+        end
+      end
+    end
+
+    match consume delta'
+    | let delta: D =>
+      delta._raise_cutoff_no_delta(_cutoff)
+      consume delta
+    else
+      recover TLog[A, T, B](_cutoff) end
+    end
+
   fun ref converge(that: TLog[A, T, B] box): Bool =>
     """
     Converge from the given TLog into this one, inserting any new entries,
