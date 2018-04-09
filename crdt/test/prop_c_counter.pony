@@ -25,31 +25,31 @@ class val _CCounterCmd is Stringable
     end
 
 class _CmdOnReplica[T = _CCounterCmd]
-  let _replica: USize
+  let replica: USize
   let cmd: T
 
   new create(r: USize, c: T) =>
-    _replica = r
+    replica = r
     cmd = consume c
 
-  fun replica(max: USize): USize => _replica % max
-
   fun string(): String iso^ =>
-    let str =
-      iftype T <: Stringable #read then
-        cmd.string()
-      else
-        "digest(" + (digestof cmd).string() + ")"
-      end
-    recover String().>append(str) end
+    let str = iftype T <: Stringable #read then cmd.string() else "cmd" end
+    recover
+      String()
+        .>append("_Cmd(")
+        .>append(str)
+        .>append(",")
+        .>append(replica.string())
+        .>append(")")
+    end
 
-trait CCounterProperty is Property1[Array[_CmdOnReplica]]
-  fun property(commands: Array[_CmdOnReplica], h: PropertyHelper) ? =>
+trait CCounterProperty is Property1[(USize, Array[_CmdOnReplica])]
+  fun property(sample: (USize, Array[_CmdOnReplica]), h: PropertyHelper) ? =>
     """
     validate that an array of commands against random replicas
     converges to the same value as a U64 counter exposed to the same commands.
     """
-    let num_replicas = (commands.size() % 10).max(2)
+    (let num_replicas, let commands) = sample
     let replicas: Array[CCounter] = replicas.create(num_replicas)
     for x in Range[U64](0, num_replicas.u64()) do
       replicas.push(CCounter(x))
@@ -62,7 +62,7 @@ trait CCounterProperty is Property1[Array[_CmdOnReplica]]
       h.log("executing " +  cmd.string(), true)
 
       deltas.push(
-        cmd.cc_cmd(replicas(command.replica(num_replicas))?)
+        cmd.cc_cmd(replicas(command.replica)?)
       )
       expected = cmd.u_cmd(expected)
 
@@ -87,14 +87,19 @@ class CCounterIncProperty is CCounterProperty
 
   fun name(): String => "crdt.prop.CCounter.Inc"
 
-  fun gen(): Generator[Array[_CmdOnReplica]] =>
-    Generators.seq_of[_CmdOnReplica, Array[_CmdOnReplica]](
-      Generators.map2[USize, U64, _CmdOnReplica](
-        Generators.usize(),
-        Generators.u64(),
-        {(replica, inc) => _CmdOnReplica(replica, _CCounterCmd(inc, _INC)) }
-      )
-    )
+  fun gen(): Generator[(USize, Array[_CmdOnReplica])] =>
+    Generators.usize(2, 10).flat_map[(USize, Array[_CmdOnReplica])]({
+      (num_replicas) =>
+        let cmds_gen = Generators.array_of[_CmdOnReplica](
+          Generators.map2[USize, U64, _CmdOnReplica](
+            Generators.usize(0, num_replicas-1),
+            Generators.u64(),
+            {(replica, inc) => _CmdOnReplica(replica, _CCounterCmd(inc, _INC)) }
+          )
+        )
+        Generators.zip2[USize, Array[_CmdOnReplica]](
+          Generators.unit[USize](num_replicas), cmds_gen)
+      })
 
 
 class CCounterIncDecProperty is CCounterProperty
@@ -105,22 +110,30 @@ class CCounterIncDecProperty is CCounterProperty
 
   fun name(): String => "crdt.prop.CCounter"
 
-  fun gen(): Generator[Array[_CmdOnReplica]] =>
-    Generators.seq_of[_CmdOnReplica, Array[_CmdOnReplica]](
-      Generators.map2[USize, _CCounterCmd, _CmdOnReplica](
-        Generators.usize(),
-        Generators.u64().flat_map[_CCounterCmd](
-          {(u) =>
-            try
-              Generators.one_of[_CCounterCmd]([
-                 _CCounterCmd(u, _INC)
-                 _CCounterCmd(u, _DEC)
-              ])?
-            else
-              // shouldn't happen
-              Generators.repeatedly[_CCounterCmd]({()(u) => _CCounterCmd(u, _INC) })
-            end
-          }),
-        {(replica, cmd) => _CmdOnReplica(replica, cmd) })
-    )
+  fun gen(): Generator[(USize, Array[_CmdOnReplica])] =>
+    Generators.usize(2, 10).flat_map[(USize, Array[_CmdOnReplica])]({
+      (num_replicas) =>
+        let cmds_gen =
+          Generators.array_of[_CmdOnReplica](
+            Generators.map2[USize, _CCounterCmd, _CmdOnReplica](
+              Generators.usize(0, num_replicas-1),
+              Generators.u64().flat_map[_CCounterCmd]({
+                (u) =>
+                  try
+                    Generators.one_of[_CCounterCmd]([
+                       _CCounterCmd(u, _INC)
+                       _CCounterCmd(u, _DEC)
+                    ])?
+                  else
+                    // shouldn't happen
+                    Generators.unit[_CCounterCmd](_CCounterCmd(u, _INC))
+                  end
+              }),
+              {(replica, cmd) => _CmdOnReplica(replica, cmd) }
+          )
+        )
+        Generators.zip2[USize, Array[_CmdOnReplica]](
+          Generators.unit[USize](num_replicas),
+          cmds_gen)
+      })
 

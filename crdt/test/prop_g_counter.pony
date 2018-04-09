@@ -15,10 +15,9 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
     """
     generate a random sequence of increment commands on random replicas
     """
-    let num_replica_gen = Generators.usize(2, 10)
-    let replica_cmd_gen = num_replica_gen.flat_map[Array[_CmdOnReplica[U64]]](
+    Generators.usize(2, 10).flat_map[(USize, Array[_CmdOnReplica[U64]])](
       {(num_replicas) =>
-        Generators.seq_of[_CmdOnReplica[U64], Array[_CmdOnReplica[U64]]](
+        let cmds_gen = Generators.array_of[_CmdOnReplica[U64]](
           Generators.map2[USize, U64, _CmdOnReplica[U64]](
             Generators.usize(0, num_replicas-1),
             Generators.u64(),
@@ -26,8 +25,9 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
               _CmdOnReplica[U64](replica, inc) }
           )
         )
+        Generators.zip2[USize, Array[_CmdOnReplica[U64]]](
+          Generators.unit[USize](num_replicas), cmds_gen)
       })
-    Generators.zip2[USize, Array[_CmdOnReplica[U64]]](num_replica_gen, replica_cmd_gen)
 
   fun property(sample: (USize, Array[_CmdOnReplica[U64]]), h: PropertyHelper) ? =>
     """
@@ -49,7 +49,7 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
       h.log("executing +" + inc.string(), true)
 
       deltas.push(
-        replicas(command.replica(num_replicas))?.increment(inc))
+        replicas(command.replica)?.increment(inc))
       (expected, let overflowed) = expected.addc(inc)
       overflow = overflow or overflowed
 
