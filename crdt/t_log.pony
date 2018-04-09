@@ -189,8 +189,8 @@ class ref TLog[
     are present, the cutoff timestamp will remain unchanged.
     """
     try
-      _cutoff = _values(n')?._2
-      var n = n' + 1
+      _cutoff = _values(n' - 1)?._2
+      var n = n' - 1
       while (n = n + 1) < size() do
         if _values(n)?._2 < _cutoff then
           _values.truncate(n)

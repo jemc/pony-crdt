@@ -144,6 +144,21 @@ class TestTLog is UnitTest
     h.assert_eq[String](a(1)?._1, "banana")
     h.assert_eq[U64](a(1)?._2, 6)
 
+    a.trim(1)
+
+    h.assert_false(a.converge(b))
+    h.assert_false(a.converge(c))
+    h.assert_false(b.converge(c))
+    h.assert_true(b.converge(a))
+    h.assert_true(c.converge(a))
+    h.assert_false(c.converge(b))
+
+    h.assert_eq[USize](1, a.size())
+    h.assert_eq[USize](1, b.size())
+    h.assert_eq[USize](1, c.size())
+    h.assert_eq[String](a(0)?._1, "apple")
+    h.assert_eq[U64](a(0)?._2, 7)
+
     a.raise_cutoff(100)
     a.raise_cutoff(99) // no effect
 
@@ -284,6 +299,21 @@ class TestTLogDelta is UnitTest
     h.assert_eq[U64](a(0)?._2, 7)
     h.assert_eq[String](a(1)?._1, "banana")
     h.assert_eq[U64](a(1)?._2, 6)
+
+    a_delta = a.trim(1)
+
+    h.assert_false(a.converge(b_delta))
+    h.assert_false(a.converge(c_delta))
+    h.assert_false(b.converge(c_delta))
+    h.assert_true(b.converge(a_delta))
+    h.assert_true(c.converge(a_delta))
+    h.assert_false(c.converge(b_delta))
+
+    h.assert_eq[USize](1, a.size())
+    h.assert_eq[USize](1, b.size())
+    h.assert_eq[USize](1, c.size())
+    h.assert_eq[String](a(0)?._1, "apple")
+    h.assert_eq[U64](a(0)?._2, 7)
 
     a_delta = a.raise_cutoff(100)
     a_delta = a.raise_cutoff(99) // no effect, and uses 100 in the delta
