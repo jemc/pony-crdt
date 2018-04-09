@@ -29,7 +29,7 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
       })
     Generators.zip2[USize, Array[_CmdOnReplica[U64]]](num_replica_gen, replica_cmd_gen)
 
-  fun property(sample: (USize, Array[_CmdOnReplica[U64]]), h: PropertyHelper) =>
+  fun property(sample: (USize, Array[_CmdOnReplica[U64]]), h: PropertyHelper) ? =>
     """
     validate that an array of commands against random replicas
     converges to the same value as a U64 counter exposed to the same commands.
@@ -41,19 +41,17 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
     end
 
     var expected: U64 = 0
+    var overflow: Bool = false
     let deltas = Array[GCounter](commands.size())
 
     for command in commands.values() do
       let inc = command.cmd
       h.log("executing +" + inc.string(), true)
 
-      try
-        deltas.push(
-          replicas(command.replica(num_replicas))?.increment(inc))
-      else
-        h.fail("error happened")
-      end
-      expected = expected + inc
+      deltas.push(
+        replicas(command.replica(num_replicas))?.increment(inc))
+      (expected, let overflowed) = expected.addc(inc)
+      overflow = overflow or overflowed
 
       let observer = GCounter(U64.max_value())
       for replica in replicas.values() do
@@ -62,11 +60,14 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
       if not h.assert_eq[U64](observer.value(), expected) then return end
     end
 
-
-    h.log(deltas.size().string() + " deltas collected")
-    let delta_observer = GCounter(U64.max_value() - 1)
-    for delta in deltas.values() do
-      delta_observer.converge(delta)
+    if not overflow then
+      // the current GCounter is possibly diverging on overflow
+      // so the produced value depends on the order of convergence events
+      // so we don't test this part of the property on overflow
+      let delta_observer = GCounter(U64.max_value() - 1)
+      for delta in deltas.values() do
+        delta_observer.converge(delta)
+      end
+      h.assert_eq[U64](expected, delta_observer.value())
     end
-    h.assert_eq[U64](expected, delta_observer.value())
 
