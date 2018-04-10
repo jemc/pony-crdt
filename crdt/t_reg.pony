@@ -1,12 +1,16 @@
+type TRegString is TReg[String, _DefaultValueString]
+type TRegNumber[A: (Number & Real[A] val)] is TReg[A, _DefaultValueNumber[A]]
+
 class ref TReg[
   A: Comparable[A] val,
-  T: Comparable[T] val = U64,
+  V: _DefaultValueFn[A] val,
+  T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[TReg[A, T, B]] & Convergent[TReg[A, T, B]])
+  is (Equatable[TReg[A, V, T, B]] & Convergent[TReg[A, V, T, B]])
   """
   A mutable register with last-write-wins semantics for updating the value.
   That is, every update operation includes a logical timestamp (U64 by default,
-  though it may be any Comparable immutable type), and update operationss are
+  though it may be any unsigned integer type), and update operationss are
   overridden only by those with a higher logical timestamp.
 
   This implies that the timestamps must be correct (or at least logically so)
@@ -24,11 +28,10 @@ class ref TReg[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  var _value: A
-  var _timestamp: T
+  var _value:     A = V()
+  var _timestamp: T = T.from[U8](0)
 
-  new ref create(value': A, timestamp': T) =>
-    (_value, _timestamp) = (value', timestamp')
+  new ref create() => None
 
   fun apply(): A =>
     """
@@ -66,10 +69,10 @@ class ref TReg[
       false
     end
 
-  fun ref update[D: TReg[A, T, B] ref = TReg[A, T, B]](
+  fun ref update[D: TReg[A, V, T, B] ref = TReg[A, V, T, B]](
     value': A,
     timestamp': T,
-    delta': (D | None) = None)
+    delta': D = D)
   : D^ =>
     """
     Update the value and timestamp of the register, provided that the given
@@ -79,15 +82,9 @@ class ref TReg[
     """
     _update_no_delta(value', timestamp')
 
-    match consume delta'
-    | let delta: D =>
-      delta._update_no_delta(value', timestamp')
-      consume delta
-    else
-      recover TReg[A, T, B](value', timestamp') end
-    end
+    delta' .> _update_no_delta(value', timestamp')
 
-  fun ref converge(that: TReg[A, T, B] box): Bool =>
+  fun ref converge(that: TReg[A, V, T, B] box): Bool =>
     """
     Converge from the given TReg into this one.
     For this data type, the convergence is a simple update operation.
@@ -117,9 +114,9 @@ class ref TReg[
     buf.push(')')
     consume buf
 
-  fun eq(that: TReg[A, T, B] box): Bool => value().eq(that.value())
-  fun ne(that: TReg[A, T, B] box): Bool => value().ne(that.value())
-  fun lt(that: TReg[A, T, B] box): Bool => value().lt(that.value())
-  fun le(that: TReg[A, T, B] box): Bool => value().le(that.value())
-  fun gt(that: TReg[A, T, B] box): Bool => value().gt(that.value())
-  fun ge(that: TReg[A, T, B] box): Bool => value().ge(that.value())
+  fun eq(that: TReg[A, V, T, B] box): Bool => value().eq(that.value())
+  fun ne(that: TReg[A, V, T, B] box): Bool => value().ne(that.value())
+  fun lt(that: TReg[A, V, T, B] box): Bool => value().lt(that.value())
+  fun le(that: TReg[A, V, T, B] box): Bool => value().le(that.value())
+  fun gt(that: TReg[A, V, T, B] box): Bool => value().gt(that.value())
+  fun ge(that: TReg[A, V, T, B] box): Bool => value().ge(that.value())

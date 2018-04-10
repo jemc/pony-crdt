@@ -6,9 +6,9 @@ class TestTReg is UnitTest
   fun name(): String => "crdt.TReg"
 
   fun apply(h: TestHelper) =>
-    let a = TReg[String]("apple", 3)
-    let b = TReg[String]("banana", 2)
-    let c = TReg[String]("currant", 1)
+    let a = TRegString.>update("apple", 3)
+    let b = TRegString.>update("banana", 2)
+    let c = TRegString.>update("currant", 1)
 
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "banana")
@@ -61,9 +61,9 @@ class TestTRegDelta is UnitTest
   fun name(): String => "crdt.TReg (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = TReg[String]("apple", 3)
-    let b = TReg[String]("banana", 2)
-    let c = TReg[String]("currant", 1)
+    let a = TRegString.>update("apple", 3)
+    let b = TRegString.>update("banana", 2)
+    let c = TRegString.>update("currant", 1)
 
     h.assert_eq[String](a.value(), "apple")
     h.assert_eq[String](b.value(), "banana")
