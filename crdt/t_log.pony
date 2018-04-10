@@ -36,10 +36,9 @@ class ref TLog[
   All mutator methods accept and return a convergent delta-state.
   """
   let _values: Array[(A, T)] = []
-  var _cutoff: T
+  var _cutoff: T             = T.from[U8](0)
 
-  new ref create(cutoff': T) =>
-    _cutoff = cutoff'
+  new ref create() => None
 
   fun apply(index: USize): (A, T)? =>
     """
@@ -144,7 +143,7 @@ class ref TLog[
   fun ref write[D: TLog[A, T, B] ref = TLog[A, T, B]](
     value': A,
     timestamp': T,
-    delta': (D | None) = None)
+    delta': D = D)
   : D^ =>
     """
     Write the value and timestamp to the log, preserving sort order,
@@ -152,17 +151,13 @@ class ref TLog[
     """
     _write_no_delta(value', timestamp')
 
-    match consume delta'
-    | let delta: D =>
-      delta._write_no_delta(value', timestamp')
-      consume delta
-    else
-      recover TLog[A, T, B](_cutoff) .> _write_no_delta(value', timestamp') end
-    end
+    delta'
+      .> _raise_cutoff_no_delta(_cutoff)
+      .> _write_no_delta(value', timestamp')
 
   fun ref raise_cutoff[D: TLog[A, T, B] ref = TLog[A, T, B]](
     cutoff': T,
-    delta': (D | None) = None)
+    delta': D = D)
   : D^ =>
     """
     Set the cutoff timestamp (only if it higher than the current value).
@@ -170,17 +165,11 @@ class ref TLog[
     """
     _raise_cutoff_no_delta(cutoff')
 
-    match consume delta'
-    | let delta: D =>
-      delta._raise_cutoff_no_delta(_cutoff)
-      consume delta
-    else
-      recover TLog[A, T, B](_cutoff) end
-    end
+    delta' .> _raise_cutoff_no_delta(_cutoff)
 
   fun ref trim[D: TLog[A, T, B] ref = TLog[A, T, B]](
     n': USize,
-    delta': (D | None) = None)
+    delta': D = D)
   : D^ =>
     """
     Set the cutoff timestamp to the timestamp of the nth element, so that at
@@ -201,35 +190,21 @@ class ref TLog[
       end
     end
 
-    match consume delta'
-    | let delta: D =>
-      delta._raise_cutoff_no_delta(_cutoff)
-      consume delta
-    else
-      recover TLog[A, T, B](_cutoff) end
-    end
+    delta' .> _raise_cutoff_no_delta(_cutoff)
 
-  fun ref clear[D: TLog[A, T, B] ref = TLog[A, T, B]](
-    delta': (D | None) = None)
-  : D^ =>
+  fun ref clear[D: TLog[A, T, B] ref = TLog[A, T, B]](delta': D = D): D^ =>
     """
-    Set the cutoff timestamp to be the timestamp of the latest entry plus one,
+    Raise the cutoff timestamp to be the timestamp of the latest entry plus one,
     such that all local entries in the log will be discarded due to having
-    timestamps earlier than the cutoff timestamp. If there are no elements
-    in the local log, this method will have no effect.
+    timestamps earlier than the cutoff timestamp. If there are no entries in
+    the local log, this method will have no effect.
     """
     try
       _cutoff = _values(0)?._2 + T.from[U8](1)
       _values.clear()
     end
 
-    match consume delta'
-    | let delta: D =>
-      delta._raise_cutoff_no_delta(_cutoff)
-      consume delta
-    else
-      recover TLog[A, T, B](_cutoff) end
-    end
+    delta' .> _raise_cutoff_no_delta(_cutoff)
 
   fun ref converge(that: TLog[A, T, B] box): Bool =>
     """

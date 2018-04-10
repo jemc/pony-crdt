@@ -6,9 +6,9 @@ class TestTLog is UnitTest
   fun name(): String => "crdt.TLog"
 
   fun apply(h: TestHelper)? =>
-    let a = TLog[String](4)
-    let b = TLog[String](4)
-    let c = TLog[String](4)
+    let a = TLog[String].>raise_cutoff(4)
+    let b = TLog[String].>raise_cutoff(4)
+    let c = TLog[String].>raise_cutoff(4)
 
     a.write("apple", 7)
     b.write("banana", 6)
@@ -182,9 +182,9 @@ class TestTLogDelta is UnitTest
   fun name(): String => "crdt.TLog (ẟ)"
 
   fun apply(h: TestHelper)? =>
-    let a = TLog[String](4)
-    let b = TLog[String](4)
-    let c = TLog[String](4)
+    let a = TLog[String].>raise_cutoff(4)
+    let b = TLog[String].>raise_cutoff(4)
+    let c = TLog[String].>raise_cutoff(4)
 
     a.write("apple", 7)
     b.write("banana", 6)
