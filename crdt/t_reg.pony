@@ -1,5 +1,13 @@
-type TRegString is TReg[String, _DefaultValueString]
-type TRegNumber[A: (Number & Real[A] val)] is TReg[A, _DefaultValueNumber[A]]
+type TRegString[
+  T: (Integer[T] & Unsigned) = U64,
+  B: (BiasGreater | BiasLesser) = BiasGreater]
+  is TReg[String, _DefaultValueString, T, B]
+
+type TRegNumber[
+  A: (Number & Real[A] val),
+  T: (Integer[T] & Unsigned) = U64,
+  B: (BiasGreater | BiasLesser) = BiasGreater]
+  is TReg[A, _DefaultValueNumber[A], T, B]
 
 class ref TReg[
   A: Comparable[A] val,
