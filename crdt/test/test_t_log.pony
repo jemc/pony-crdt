@@ -315,8 +315,7 @@ class TestTLogDelta is UnitTest
     h.assert_eq[String](a(0)?._1, "apple")
     h.assert_eq[U64](a(0)?._2, 7)
 
-    a_delta = a.raise_cutoff(100)
-    a_delta = a.raise_cutoff(99) // no effect, and uses 100 in the delta
+    a_delta = a.trim(0)
 
     h.assert_false(a.converge(b_delta))
     h.assert_false(a.converge(c_delta))
@@ -324,10 +323,6 @@ class TestTLogDelta is UnitTest
     h.assert_true(b.converge(a_delta))
     h.assert_true(c.converge(a_delta))
     h.assert_false(c.converge(b_delta))
-
-    h.assert_eq[U64](100, a.cutoff())
-    h.assert_eq[U64](100, b.cutoff())
-    h.assert_eq[U64](100, c.cutoff())
 
     h.assert_eq[USize](0, a.size())
     h.assert_eq[USize](0, b.size())

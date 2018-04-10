@@ -1,13 +1,13 @@
 class ref TLog[
   A: Comparable[A] val,
-  T: Comparable[T] val = U64,
+  T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
   is (Equatable[TLog[A, T, B]] & Convergent[TLog[A, T, B]])
   """
   A sorted list of ordered log entries, each with a value and logical timestamp.
-  (U64 by default, though it may be any Comparable immutable type). The list
-  of entries is sorted in descending timestamp order (with the most recent
-  entries appearing first in the list).
+  (U64 by default, though it may be any unsigned integer type). The list of
+  entries is sorted in descending timestamp order (with the most recent entries
+  appearing first in the list).
 
   If the logical timestamp is equal for two compared entries, the sort order
   be determined by the bias type parameter. BiasGreater implies that the greater
@@ -184,10 +184,13 @@ class ref TLog[
   : D^ =>
     """
     Set the cutoff timestamp to the timestamp of the nth element, so that at
-    least n entries will be retained locally, but discarding all entries of
+    least n' entries will be retained locally, but discarding all entries of
     an earlier timestamp than that of the nth entry. If fewer than n' entries
-    are present, the cutoff timestamp will remain unchanged.
+    are present, the cutoff timestamp will remain unchanged. If n' is zero, the
+    effect is the same as calling the clear method.
     """
+    if n' == 0 then return clear(delta') end
+
     try
       _cutoff = _values(n' - 1)?._2
       var n = n' - 1
@@ -196,6 +199,28 @@ class ref TLog[
           _values.truncate(n)
         end
       end
+    end
+
+    match consume delta'
+    | let delta: D =>
+      delta._raise_cutoff_no_delta(_cutoff)
+      consume delta
+    else
+      recover TLog[A, T, B](_cutoff) end
+    end
+
+  fun ref clear[D: TLog[A, T, B] ref = TLog[A, T, B]](
+    delta': (D | None) = None)
+  : D^ =>
+    """
+    Set the cutoff timestamp to be the timestamp of the latest entry plus one,
+    such that all local entries in the log will be discarded due to having
+    timestamps earlier than the cutoff timestamp. If there are no elements
+    in the local log, this method will have no effect.
+    """
+    try
+      _cutoff = _values(0)?._2 + T.from[U8](1)
+      _values.clear()
     end
 
     match consume delta'
