@@ -1,4 +1,5 @@
 use "ponytest"
+use "ponycheck"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
@@ -27,3 +28,8 @@ actor Main is TestList
     test(TestUJSON)
     test(TestUJSONDelta)
     test(TestUJSONNode)
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncProperty))
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncDecProperty))
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica[U64]])](GCounterIncProperty))
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica[_PNCounterCmd]])](PNCounterIncProperty))
+    test(Property1UnitTest[(USize, Array[_CmdOnReplica[_PNCounterCmd]])](PNCounterIncDecProperty))
