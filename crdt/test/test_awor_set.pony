@@ -6,9 +6,9 @@ class TestAWORSet is UnitTest
   fun name(): String => "crdt.AWORSet"
 
   fun apply(h: TestHelper) =>
-    let a = AWORSet[String]("a".hash())
-    let b = AWORSet[String]("b".hash())
-    let c = AWORSet[String]("c".hash())
+    let a = AWORSet[String]("a".hash64())
+    let b = AWORSet[String]("b".hash64())
+    let c = AWORSet[String]("c".hash64())
 
     a.set("apple")
     b.set("banana")
@@ -90,9 +90,9 @@ class TestAWORSetDelta is UnitTest
   fun name(): String => "crdt.AWORSet (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = AWORSet[String]("a".hash())
-    let b = AWORSet[String]("b".hash())
-    let c = AWORSet[String]("c".hash())
+    let a = AWORSet[String]("a".hash64())
+    let b = AWORSet[String]("b".hash64())
+    let c = AWORSet[String]("c".hash64())
 
     var a_delta = a.set("apple")
     var b_delta = b.set("banana")

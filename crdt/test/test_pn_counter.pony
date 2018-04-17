@@ -6,9 +6,9 @@ class TestPNCounter is UnitTest
   fun name(): String => "crdt.PNCounter"
 
   fun apply(h: TestHelper) =>
-    let a = PNCounter("a".hash())
-    let b = PNCounter("b".hash())
-    let c = PNCounter("c".hash())
+    let a = PNCounter("a".hash64())
+    let b = PNCounter("b".hash64())
+    let c = PNCounter("c".hash64())
 
     a.increment(1)
     b.decrement(2)
@@ -67,9 +67,9 @@ class TestPNCounterDelta is UnitTest
   fun name(): String => "crdt.PNCounter (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = PNCounter("a".hash())
-    let b = PNCounter("b".hash())
-    let c = PNCounter("c".hash())
+    let a = PNCounter("a".hash64())
+    let b = PNCounter("b".hash64())
+    let c = PNCounter("c".hash64())
 
     var a_delta = a.increment(1)
     var b_delta = b.decrement(2)

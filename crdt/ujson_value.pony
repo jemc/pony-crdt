@@ -3,7 +3,7 @@ use "collections"
 type UJSONValue is (None | Bool | I64 | F64 | String)
 
 primitive _UJSONValueHashFn is HashFunction[UJSONValue]
-  fun hash(x': UJSONValue): U64 => digestof x'
+  fun hash(x': UJSONValue): USize => digestof x'
   fun eq(x': UJSONValue, y: UJSONValue): Bool =>
     match x'
     | let x: None   => y is None

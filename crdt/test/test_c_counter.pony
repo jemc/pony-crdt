@@ -6,9 +6,9 @@ class TestCCounter is UnitTest
   fun name(): String => "crdt.CCounter"
 
   fun apply(h: TestHelper) =>
-    let a = CCounter("a".hash())
-    let b = CCounter("b".hash())
-    let c = CCounter("c".hash())
+    let a = CCounter("a".hash64())
+    let b = CCounter("b".hash64())
+    let c = CCounter("c".hash64())
 
     a.increment(1)
     b.decrement(2)
@@ -67,9 +67,9 @@ class TestCCounterDelta is UnitTest
   fun name(): String => "crdt.CCounter (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = CCounter("a".hash())
-    let b = CCounter("b".hash())
-    let c = CCounter("c".hash())
+    let a = CCounter("a".hash64())
+    let b = CCounter("b".hash64())
+    let c = CCounter("c".hash64())
 
     var a_delta = a.increment(1)
     var b_delta = b.decrement(2)

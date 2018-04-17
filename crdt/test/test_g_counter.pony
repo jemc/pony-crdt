@@ -6,9 +6,9 @@ class TestGCounter is UnitTest
   fun name(): String => "crdt.GCounter"
 
   fun apply(h: TestHelper) =>
-    let a = GCounter("a".hash())
-    let b = GCounter("b".hash())
-    let c = GCounter("c".hash())
+    let a = GCounter("a".hash64())
+    let b = GCounter("b".hash64())
+    let c = GCounter("c".hash64())
 
     a.increment(1)
     b.increment(2)
@@ -67,9 +67,9 @@ class TestGCounterDelta is UnitTest
   fun name(): String => "crdt.GCounter (ẟ)"
 
   fun apply(h: TestHelper) =>
-    let a = GCounter("a".hash())
-    let b = GCounter("b".hash())
-    let c = GCounter("c".hash())
+    let a = GCounter("a".hash64())
+    let b = GCounter("b".hash64())
+    let c = GCounter("c".hash64())
 
     var a_delta = a.increment(1)
     var b_delta = b.increment(2)

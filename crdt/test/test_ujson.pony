@@ -27,8 +27,8 @@ class TestUJSON is UnitTest
     """
     Concurrent assignment to the same register by different replicas.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     // TODO: use update sugar after fixing ponyc to allow value' as param name.
     p.update(["key"], "A")
@@ -54,8 +54,8 @@ class TestUJSON is UnitTest
     """
     Modifying a nested map while concurrently the entire map is overwritten.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     p.update(["colors"; "blue"], "#0000ff")
 
@@ -88,8 +88,8 @@ class TestUJSON is UnitTest
     """
     Concurrently assigning values of different types to the same map key.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     p.update(["a"; "x"], "y")
 
@@ -122,8 +122,8 @@ class TestUJSON is UnitTest
     """
     Concurrent insertion and deletion the same element favors the insertion.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     p.insert(["fruits"], "apple")
 
@@ -168,8 +168,8 @@ class TestUJSONDelta is UnitTest
     """
     Concurrent assignment to the same register by different replicas.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     // TODO: use update sugar after fixing ponyc to allow value' as param name.
     var p_delta = p.update(["key"], "A")
@@ -195,8 +195,8 @@ class TestUJSONDelta is UnitTest
     """
     Modifying a nested map while concurrently the entire map is overwritten.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     var p_delta = p.update(["colors"; "blue"], "#0000ff")
 
@@ -229,8 +229,8 @@ class TestUJSONDelta is UnitTest
     """
     Concurrently assigning values of different types to the same map key.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     var p_delta = p.update(["a"; "x"], "y")
 
@@ -263,8 +263,8 @@ class TestUJSONDelta is UnitTest
     """
     Concurrent insertion and deletion the same element favors the insertion.
     """
-    let p = UJSON("p".hash())
-    let q = UJSON("q".hash())
+    let p = UJSON("p".hash64())
+    let q = UJSON("q".hash64())
 
     var p_delta = p.insert(["fruits"], "apple")
 
