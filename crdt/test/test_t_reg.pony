@@ -110,3 +110,21 @@ class TestTRegDelta is UnitTest
     h.assert_eq[U64](a.timestamp(), 5)
     h.assert_eq[U64](b.timestamp(), 5)
     h.assert_eq[U64](c.timestamp(), 5)
+
+class TestTRegTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.TReg (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data = TRegString .> update("apple", 5)
+
+    _TestTokensWellFormed[(String | U64)](h, data.to_tokens())
+
+    try
+      h.assert_eq[TRegString](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

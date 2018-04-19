@@ -31,17 +31,19 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
   prefer using the DotKernelSingle class instead of this one.
   """
   let _id: ID
-  embed _ctx: _DotContext                  = _ctx.create()
-  embed _map: HashMap[_Dot, A, _DotHashFn] = _map.create()
+  embed _ctx: _DotContext
+  embed _map: HashMap[_Dot, A, _DotHashFn]
 
   new create(id': ID) =>
     """
     Instantiate under the given unique replica id.
-    
+
     It will only be possible to add dotted values under this replica id,
     aside from converging it as external data with the `converge` function.
     """
-    _id = id'
+    _id  = id'
+    _ctx = _ctx.create()
+    _map = _map.create()
 
   fun id(): ID =>
     """
@@ -183,3 +185,81 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     out.>push(';').>push(' ')
     out.append(_ctx.string())
     out
+
+  new ref from_tokens(that: TokenIterator[(ID | U32 | A)]) ? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    if that.next_count()? != 3 then error end
+
+    _id = that.next[ID]()?
+
+    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
+
+    var count = that.next_count()?
+    if (count % 3) != 0 then error end
+    count = count / 3
+
+    _map = _map.create(count)
+    while (count = count - 1) > 0 do
+      _map.update((that.next[ID]()?, that.next[U32]()?), that.next[A]()?)
+    end
+
+  new ref from_tokens_map[B: Any #share](
+    that: TokenIterator[(ID | U32 | B)],
+    a_fn: {(TokenIterator[(ID | U32 | B)]): A?} val)
+    ?
+  =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens,
+    using a custom function for deserializing the B tokens as instance(s) of A.
+    """
+    if that.next_count()? != 3 then error end
+
+    _id = that.next[ID]()?
+
+    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | B)].subset[(ID | U32)](that))?
+
+    var count = that.next_count()?
+    if (count % 3) != 0 then error end
+    count = count / 3
+
+    _map = _map.create(count)
+    while (count = count - 1) > 0 do
+      _map.update((that.next[ID]()?, that.next[U32]()?), a_fn(that)?)
+    end
+
+  fun each_token(fn: {ref(Token[(ID | U32 | A)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    each_token_map[A](fn, {(fn, a) => fn(a) })
+
+  fun each_token_map[B: Any #share](
+    fn: {ref(Token[(ID | U32 | B)])} ref,
+    a_fn: {({ref(Token[(ID | U32 | B)])} ref, A)} val)
+  =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens,
+    using a custom function for serializing the A type as one or more B tokens.
+    """
+    fn(USize(3))
+
+    fn(_id)
+
+    _ctx.each_token(fn)
+
+    fn(_map.size() * 3)
+    for (i_n, v) in _map.pairs() do
+      (let i, let n) = i_n // TODO: fix ponyc (#2662) and move these inline
+      fn(i)
+      fn(n)
+      a_fn(fn, v)
+    end
+
+  fun to_tokens(): TokenIterator[(ID | U32 | A)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(ID | U32 | A)].to_tokens(this)
+

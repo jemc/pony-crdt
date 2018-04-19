@@ -72,3 +72,24 @@ class TestGSetDelta is UnitTest
     h.assert_eq[GSet[String]](a, b)
     h.assert_eq[GSet[String]](b, c)
     h.assert_eq[GSet[String]](c, a)
+
+class TestGSetTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.GSet (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data = GSet[String]
+      .> set("apple")
+      .> set("banana")
+      .> set("currant")
+
+    _TestTokensWellFormed[String](h, data.to_tokens())
+
+    try
+      h.assert_eq[GSet[String]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

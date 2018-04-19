@@ -25,8 +25,12 @@ class ref _DotContext is Convergent[_DotContext]
   When enough dots are accumulated into the _dot_cloud to be consecutive
   with the current threshold of _complete history, they can compacted into it.
   """
-  embed _complete:  Map[ID, U32]              = _complete.create()
-  embed _dot_cloud: HashSet[_Dot, _DotHashFn] = _dot_cloud.create()
+  embed _complete:  Map[ID, U32]
+  embed _dot_cloud: HashSet[_Dot, _DotHashFn]
+
+  new ref create() =>
+    _complete  = _complete.create()
+    _dot_cloud = _dot_cloud.create()
 
   fun contains(dot: _Dot): Bool =>
     """
@@ -152,3 +156,56 @@ class ref _DotContext is Convergent[_DotContext]
     end
     out.push(')')
     out
+
+  new ref from_tokens(that: TokenIterator[(ID | U32)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    if that.next_count()? != 2 then error end
+
+    var complete_count = that.next_count()?
+    if (complete_count % 2) != 0 then error end
+    complete_count = complete_count / 2
+
+    _complete = _complete.create(complete_count)
+    while (complete_count = complete_count - 1) > 0 do
+      _complete.update(
+        that.next[ID]()?,
+        that.next[U32]()?
+      )
+    end
+
+    var dot_cloud_count = that.next_count()?
+    if (dot_cloud_count % 2) != 0 then error end
+    dot_cloud_count = dot_cloud_count / 2
+
+    _dot_cloud = _dot_cloud.create(dot_cloud_count)
+    while (dot_cloud_count = dot_cloud_count - 1) > 0 do
+      _dot_cloud.set(
+        (that.next[ID]()?, that.next[U32]()?)
+      )
+    end
+
+  fun each_token(fn: {ref(Token[(ID | U32)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(USize(2))
+
+    fn(_complete.size() * 2)
+    for (id, n) in _complete.pairs() do
+      fn(id)
+      fn(n)
+    end
+
+    fn(_dot_cloud.size() * 2)
+    for (id, n) in _dot_cloud.values() do
+      fn(id)
+      fn(n)
+    end
+
+  fun to_tokens(): TokenIterator[(ID | U32)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(ID | U32)].to_tokens(this)

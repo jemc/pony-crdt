@@ -290,3 +290,30 @@ class TestUJSONDelta is UnitTest
 
     h.assert_eq[String](p.get().string(), """{"fruits":["apple","dewberry"]}""")
     h.assert_eq[String](q.get().string(), """{"fruits":["dewberry","apple"]}""")
+
+class TestUJSONTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.UJSON (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data   = UJSON("a".hash64())
+    let data'  = UJSON("b".hash64())
+    let data'' = UJSON("c".hash64())
+
+    data.insert(["fruits"], "apple")
+    data'.remove(["fruits"], "apple")
+    data''.insert(["fruits"], "banana")
+
+    data.converge(data')
+    data.converge(data'')
+
+    _TestTokensWellFormed[(ID | U32 | UJSONValue)](h, data.to_tokens())
+
+    try
+      h.assert_eq[UJSON](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

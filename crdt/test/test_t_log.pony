@@ -327,3 +327,24 @@ class TestTLogDelta is UnitTest
     h.assert_eq[USize](0, a.size())
     h.assert_eq[USize](0, b.size())
     h.assert_eq[USize](0, c.size())
+
+class TestTLogTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.TLog (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data = TLog[String]
+      .> write("apple", 7)
+      .> write("banana", 6)
+      .> write("currant", 4)
+
+    _TestTokensWellFormed[(String | U64)](h, data.to_tokens())
+
+    try
+      h.assert_eq[TLog[String]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

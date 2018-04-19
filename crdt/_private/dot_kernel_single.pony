@@ -13,8 +13,8 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
   See the docs for the DotKernel class for more information.
   """
   let _id: ID
-  embed _ctx: _DotContext       = _ctx.create()
-  embed _map: Map[ID, (U32, A)] = _map.create()
+  embed _ctx: _DotContext
+  embed _map: Map[ID, (U32, A)]
 
   new create(id': ID) =>
     """
@@ -23,7 +23,9 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     It will only be possible to add dotted values under this replica id,
     aside from converging it as external data with the `converge` function.
     """
-    _id = id'
+    _id  = id'
+    _ctx = _ctx.create()
+    _map = _map.create()
 
   fun id(): ID =>
     """
@@ -181,3 +183,48 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     out.>push(';').>push(' ')
     out.append(_ctx.string())
     out
+
+  new ref from_tokens(that: TokenIterator[(ID | U32 | A)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    if that.next_count()? != 3 then error end
+
+    _id = that.next[ID]()?
+
+    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
+
+    var count = that.next_count()?
+    if (count % 3) != 0 then error end
+    count = count / 3
+
+    _map = _map.create(count)
+    while (count = count - 1) > 0 do
+      _map.update(
+        that.next[ID]()?,
+        (that.next[U32]()?, that.next[A]()?)
+      )
+    end
+
+  fun each_token(fn: {ref(Token[(ID | U32 | A)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(USize(3))
+
+    fn(_id)
+
+    _ctx.each_token(fn)
+
+    fn(_map.size() * 3)
+    for (i, (n, v)) in _map.pairs() do
+      fn(i)
+      fn(n)
+      fn(v)
+    end
+
+  fun to_tokens(): TokenIterator[(ID | U32 | A)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(ID | U32 | A)].to_tokens(this)

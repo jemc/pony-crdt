@@ -122,3 +122,30 @@ class TestGCounterDelta is UnitTest
     h.assert_eq[GCounter](a, b)
     h.assert_eq[GCounter](b, c)
     h.assert_eq[GCounter](c, a)
+
+class TestGCounterTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.GCounter (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data   = GCounter[U8]("a".hash64())
+    let data'  = GCounter[U8]("b".hash64())
+    let data'' = GCounter[U8]("c".hash64())
+
+    data.increment(4)
+    data'.increment(5)
+    data''.increment(6)
+
+    data.converge(data')
+    data.converge(data'')
+
+    _TestTokensWellFormed[(U64 | U8)](h, data.to_tokens())
+
+    try
+      h.assert_eq[GCounter[U8]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

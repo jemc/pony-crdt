@@ -126,3 +126,27 @@ class TestP2SetDelta is UnitTest
     h.assert_eq[P2Set[String]](a, b)
     h.assert_eq[P2Set[String]](b, c)
     h.assert_eq[P2Set[String]](c, a)
+
+class TestP2SetTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.P2Set (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data = P2Set[String]
+      .> set("apple")
+      .> set("banana")
+      .> set("currant")
+      .> set("dewberry")
+      .> unset("dewberry")
+      .> unset("apple")
+
+    _TestTokensWellFormed[String](h, data.to_tokens())
+
+    try
+      h.assert_eq[P2Set[String]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

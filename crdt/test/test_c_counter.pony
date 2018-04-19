@@ -122,3 +122,30 @@ class TestCCounterDelta is UnitTest
     h.assert_eq[CCounter](a, b)
     h.assert_eq[CCounter](b, c)
     h.assert_eq[CCounter](c, a)
+
+class TestCCounterTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.CCounter (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data   = CCounter[U8]("a".hash64())
+    let data'  = CCounter[U8]("b".hash64())
+    let data'' = CCounter[U8]("c".hash64())
+
+    data.increment(4)
+    data'.decrement(5)
+    data''.increment(6)
+
+    data.converge(data')
+    data.converge(data'')
+
+    _TestTokensWellFormed[(U64 | U32 | U8)](h, data.to_tokens())
+
+    try
+      h.assert_eq[CCounter[U8]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

@@ -166,3 +166,30 @@ class TestAWORSetDelta is UnitTest
     h.assert_eq[AWORSet[String]](a, b)
     h.assert_eq[AWORSet[String]](b, c)
     h.assert_eq[AWORSet[String]](c, a)
+
+class TestAWORSetTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.AWORSet (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data   = AWORSet[String]("a".hash64())
+    let data'  = AWORSet[String]("b".hash64())
+    let data'' = AWORSet[String]("c".hash64())
+
+    data.set("apple")
+    data'.unset("apple")
+    data''.set("banana")
+
+    data.converge(data')
+    data.converge(data'')
+
+    _TestTokensWellFormed[(U64 | U32 | String)](h, data.to_tokens())
+
+    try
+      h.assert_eq[AWORSet[String]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

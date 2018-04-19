@@ -245,3 +245,34 @@ class ref THashSet[
   fun values(): Iterator[A]^     => result().values()
   fun timestamps(): Iterator[T]^ => map().values()
   fun pairs(): Iterator[(A, T)]^ => map().pairs()
+
+  new ref from_tokens(that: TokenIterator[(A | T | Bool)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    var count = that.next_count()?
+
+    if (count % 3) != 0 then error end
+    count = count / 3
+
+    _data = _data.create(count)
+    while (count = count - 1) > 0 do
+      _data.update(that.next[A]()?, (that.next[T]()?, that.next[Bool]()?))
+    end
+
+  fun each_token(fn: {ref(Token[(A | T | Bool)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(_data.size() * 3)
+    for (k, (t, b)) in _data.pairs() do
+      fn(k)
+      fn(t)
+      fn(b)
+    end
+
+  fun to_tokens(): TokenIterator[(A | T | Bool)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(A | T | Bool)].to_tokens(this)

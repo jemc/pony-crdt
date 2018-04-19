@@ -98,3 +98,38 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   fun le(that: GCounter[A] box): Bool => value().le(that.value())
   fun gt(that: GCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: GCounter[A] box): Bool => value().ge(that.value())
+
+  new ref from_tokens(that: TokenIterator[(ID | A)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    var count = that.next_count()?
+
+    if count < 1 then error end
+    count = count - 1
+    _id   = that.next[ID]()?
+
+    if (count % 2) != 0 then error end
+    count = count / 2
+
+    _data = _data.create(count)
+    while (count = count - 1) > 0 do
+      _data.update(that.next[ID]()?, that.next[A]()?)
+    end
+
+  fun each_token(fn: {ref(Token[(ID | A)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(1 + (_data.size() * 2))
+    fn(_id)
+    for (id, v) in _data.pairs() do
+      fn(id)
+      fn(v)
+    end
+
+  fun to_tokens(): TokenIterator[(ID | A)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(ID | A)].to_tokens(this)

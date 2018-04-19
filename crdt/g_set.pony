@@ -102,3 +102,26 @@ class ref GHashSet[A: Any #share, H: HashFunction[A] val]
   fun gt(that: GHashSet[A, H] box): Bool => _data.gt(that._data)
   fun ge(that: GHashSet[A, H] box): Bool => _data.ge(that._data)
   fun values(): Iterator[A]^ => _data.values()
+
+  new ref from_tokens(that: TokenIterator[A])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    var count = that.next_count()?
+    _data = _data.create(count)
+    while (count = count - 1) > 0 do
+      _data.set(that.next[A]()?)
+    end
+
+  fun each_token(fn: {ref(Token[A])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(_data.size())
+    for value in _data.values() do fn(value) end
+
+  fun to_tokens(): TokenIterator[A] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[A].to_tokens(this)

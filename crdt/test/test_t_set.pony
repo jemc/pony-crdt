@@ -142,3 +142,27 @@ class TestTSetDelta is UnitTest
     h.assert_eq[TSet[String]](a, b)
     h.assert_eq[TSet[String]](b, c)
     h.assert_eq[TSet[String]](c, a)
+
+class TestTSetTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.TSet (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data = TSet[String]
+      .> set("apple",    5)
+      .> set("banana",   5)
+      .> set("currant",  5)
+      .> set("dewberry", 5)
+      .> unset("dewberry", 6)
+      .> unset("apple",    6)
+
+    _TestTokensWellFormed[(String | U64 | Bool)](h, data.to_tokens())
+
+    try
+      h.assert_eq[TSet[String]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

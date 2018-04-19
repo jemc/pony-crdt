@@ -119,3 +119,55 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
   fun le(that: PNCounter[A] box): Bool => value().le(that.value())
   fun gt(that: PNCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: PNCounter[A] box): Bool => value().ge(that.value())
+
+  new ref from_tokens(that: TokenIterator[(ID | A)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    if that.next_count()? != 3 then error end
+
+    _id = that.next[ID]()?
+
+    var pos_count = that.next_count()?
+    if (pos_count % 2) != 0 then error end
+    pos_count = pos_count / 2
+
+    _pos = _pos.create(pos_count)
+    while (pos_count = pos_count - 1) > 0 do
+      _pos.update(that.next[ID]()?, that.next[A]()?)
+    end
+
+    var neg_count = that.next_count()?
+    if (neg_count % 2) != 0 then error end
+    neg_count = neg_count / 2
+
+    _neg = _neg.create(neg_count)
+    while (neg_count = neg_count - 1) > 0 do
+      _neg.update(that.next[ID]()?, that.next[A]()?)
+    end
+
+  fun each_token(fn: {ref(Token[(ID | A)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(USize(3))
+
+    fn(_id)
+
+    fn(_pos.size() * 2)
+    for (id, v) in _pos.pairs() do
+      fn(id)
+      fn(v)
+    end
+
+    fn(_neg.size() * 2)
+    for (id, v) in _neg.pairs() do
+      fn(id)
+      fn(v)
+    end
+
+  fun to_tokens(): TokenIterator[(ID | A)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(ID | A)].to_tokens(this)

@@ -122,3 +122,30 @@ class TestPNCounterDelta is UnitTest
     h.assert_eq[PNCounter](a, b)
     h.assert_eq[PNCounter](b, c)
     h.assert_eq[PNCounter](c, a)
+
+class TestPNCounterTokens is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.PNCounter (tokens)"
+
+  fun apply(h: TestHelper) =>
+    let data   = PNCounter[U8]("a".hash64())
+    let data'  = PNCounter[U8]("b".hash64())
+    let data'' = PNCounter[U8]("c".hash64())
+
+    data.increment(4)
+    data'.decrement(5)
+    data''.increment(6)
+
+    data.converge(data')
+    data.converge(data'')
+
+    _TestTokensWellFormed[(U64 | U8)](h, data.to_tokens())
+
+    try
+      h.assert_eq[PNCounter[U8]](
+        data,
+        data.from_tokens(data.to_tokens())?
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

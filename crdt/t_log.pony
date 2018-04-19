@@ -35,10 +35,12 @@ class ref TLog[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _values: Array[(A, T)] = []
-  var _cutoff: T             = T.from[U8](0)
+  let _values: Array[(A, T)]
+  var _cutoff: T
 
-  new ref create() => None
+  new ref create() =>
+    _values = []
+    _cutoff = T.from[U8](0)
 
   fun apply(index: USize): (A, T)? =>
     """
@@ -291,3 +293,38 @@ class ref TLog[
     else
       false
     end
+
+  new ref from_tokens(that: TokenIterator[(A | T)])? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    var count = that.next_count()?
+
+    if count < 1 then error end
+    count = count - 1
+    _cutoff = that.next[T]()?
+
+    if (count % 2) != 0 then error end
+    count = count / 2
+
+    _values = _values.create(count)
+    while (count = count - 1) > 0 do
+      _values.push((that.next[A]()?, that.next[T]()?))
+    end
+
+  fun each_token(fn: {ref(Token[(A | T)])} ref) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    fn(1 + (_values.size() * 2))
+    fn(_cutoff)
+    for (v, t) in _values.values() do
+      fn(v)
+      fn(t)
+    end
+
+  fun to_tokens(): TokenIterator[(A | T)] =>
+    """
+    Serialize an instance of this data structure to a stream of tokens.
+    """
+    Tokens[(A | T)].to_tokens(this)
