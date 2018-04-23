@@ -250,8 +250,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     _ctx.each_token(fn)
 
     fn(_map.size() * 3)
-    for (i_n, v) in _map.pairs() do
-      (let i, let n) = i_n // TODO: fix ponyc (#2662) and move these inline
+    for ((i, n), v) in _map.pairs() do
       fn(i)
       fn(n)
       a_fn(fn, v)
