@@ -294,7 +294,7 @@ class ref TLog[
       false
     end
 
-  new ref from_tokens(that: TokenIterator[(A | T)])? =>
+  new ref from_tokens(that: TokenIterator[TLogToken[A, T]])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -312,7 +312,7 @@ class ref TLog[
       _values.push((that.next[A]()?, that.next[T]()?))
     end
 
-  fun each_token(fn: {ref(Token[(A | T)])} ref) =>
+  fun each_token(fn: {ref(Token[TLogToken[A, T]])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -323,8 +323,10 @@ class ref TLog[
       fn(t)
     end
 
-  fun to_tokens(): TokenIterator[(A | T)] =>
+  fun to_tokens(): TokenIterator[TLogToken[A, T]] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[(A | T)].to_tokens(this)
+    Tokens[TLogToken[A, T]].to_tokens(this)
+
+type TLogToken[A, T] is (A | T)

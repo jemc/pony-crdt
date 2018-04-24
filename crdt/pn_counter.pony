@@ -120,7 +120,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: PNCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: PNCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[(ID | A)])? =>
+  new ref from_tokens(that: TokenIterator[PNCounterToken[A]])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -146,7 +146,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
       _neg.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[(ID | A)])} ref) =>
+  fun each_token(fn: {ref(Token[PNCounterToken[A]])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -166,8 +166,10 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
       fn(v)
     end
 
-  fun to_tokens(): TokenIterator[(ID | A)] =>
+  fun to_tokens(): TokenIterator[PNCounterToken[A]] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[(ID | A)].to_tokens(this)
+    Tokens[PNCounterToken[A]].to_tokens(this)
+
+type PNCounterToken[A] is (ID | A)

@@ -129,7 +129,7 @@ class ref TReg[
   fun gt(that: TReg[A, V, T, B] box): Bool => value().gt(that.value())
   fun ge(that: TReg[A, V, T, B] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[(A | T)])? =>
+  new ref from_tokens(that: TokenIterator[TRegToken[A, T]])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -137,7 +137,7 @@ class ref TReg[
     _value     = that.next[A]()?
     _timestamp = that.next[T]()?
 
-  fun each_token(fn: {ref(Token[(A | T)])} ref) =>
+  fun each_token(fn: {ref(Token[TRegToken[A, T]])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -145,8 +145,10 @@ class ref TReg[
     fn(_value)
     fn(_timestamp)
 
-  fun to_tokens(): TokenIterator[(A | T)] =>
+  fun to_tokens(): TokenIterator[TRegToken[A, T]] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[(A | T)].to_tokens(this)
+    Tokens[TRegToken[A, T]].to_tokens(this)
+
+type TRegToken[A, T] is (A | T)

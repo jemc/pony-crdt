@@ -99,7 +99,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: GCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: GCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[(ID | A)])? =>
+  new ref from_tokens(that: TokenIterator[GCounterToken[A]])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -117,7 +117,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
       _data.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[(ID | A)])} ref) =>
+  fun each_token(fn: {ref(Token[GCounterToken[A]])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -128,8 +128,10 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
       fn(v)
     end
 
-  fun to_tokens(): TokenIterator[(ID | A)] =>
+  fun to_tokens(): TokenIterator[GCounterToken[A]] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[(ID | A)].to_tokens(this)
+    Tokens[GCounterToken[A]].to_tokens(this)
+
+type GCounterToken[A] is (ID | A)

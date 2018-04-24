@@ -135,7 +135,7 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
   fun eq(that: UJSON box): Bool => get() == that.get()
   fun ne(that: UJSON box): Bool => not eq(that)
 
-  new ref from_tokens(that: TokenIterator[(ID | U32 | UJSONValue)])? =>
+  new ref from_tokens(that: TokenIterator[UJSONToken])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -155,7 +155,7 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
       (consume path, value)
     })?
 
-  fun each_token(fn: {ref(Token[(ID | U32 | UJSONValue)])} ref) =>
+  fun each_token(fn: {ref(Token[UJSONToken])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -166,8 +166,10 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
       fn(value)
     })
 
-  fun to_tokens(): TokenIterator[(ID | U32 | UJSONValue)] =>
+  fun to_tokens(): TokenIterator[UJSONToken] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[(ID | U32 | UJSONValue)].to_tokens(this)
+    Tokens[UJSONToken].to_tokens(this)
+
+type UJSONToken is (ID | U32 | UJSONValue)

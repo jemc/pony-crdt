@@ -147,7 +147,7 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
   fun ge(that: P2HashSet[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
-  new ref from_tokens(that: TokenIterator[A])? =>
+  new ref from_tokens(that: TokenIterator[P2SetToken[A]])? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
@@ -165,7 +165,7 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
       _del.set(that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[A])} ref) =>
+  fun each_token(fn: {ref(Token[P2SetToken[A]])} ref) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
@@ -177,8 +177,10 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
     fn(_del.size())
     for value in _del.values() do fn(value) end
 
-  fun to_tokens(): TokenIterator[A] =>
+  fun to_tokens(): TokenIterator[P2SetToken[A]] =>
     """
     Serialize an instance of this data structure to a stream of tokens.
     """
-    Tokens[A].to_tokens(this)
+    Tokens[P2SetToken[A]].to_tokens(this)
+
+type P2SetToken[A] is A
