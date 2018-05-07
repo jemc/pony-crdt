@@ -30,7 +30,6 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
   If you wish to always keep only the latest causal active value per replica,
   prefer using the DotKernelSingle class instead of this one.
   """
-  let _id: ID
   embed _ctx: _DotContext
   embed _map: HashMap[_Dot, A, _DotHashFn]
 
@@ -41,15 +40,8 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     It will only be possible to add dotted values under this replica id,
     aside from converging it as external data with the `converge` function.
     """
-    _id  = id'
-    _ctx = _ctx.create()
+    _ctx = _ctx.create(id')
     _map = _map.create()
-
-  fun id(): ID =>
-    """
-    Return the replica id used to instantiate this kernel.
-    """
-    _id
 
   fun values(): Iterator[A]^ =>
     """
@@ -72,7 +64,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     The next-sequence-numbered dot for this replica will be used, so that the
     new value has a happens-after causal relationship with previous value(s).
     """
-    let dot = _ctx.next_dot(_id)
+    let dot = _ctx.next_dot()
     _map(dot) = value'
     delta'._map(dot) = value'
     delta'._ctx.set(dot)
@@ -190,9 +182,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
-
-    _id = that.next[ID]()?
+    if that.next_count()? != 2 then error end
 
     _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
 
@@ -214,9 +204,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     Deserialize an instance of this data structure from a stream of tokens,
     using a custom function for deserializing the B tokens as instance(s) of A.
     """
-    if that.next_count()? != 3 then error end
-
-    _id = that.next[ID]()?
+    if that.next_count()? != 2 then error end
 
     _ctx = _ctx.from_tokens(Tokens[(ID | U32 | B)].subset[(ID | U32)](that))?
 
@@ -243,9 +231,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     Call the given function for each token, serializing as a sequence of tokens,
     using a custom function for serializing the A type as one or more B tokens.
     """
-    fn(USize(3))
-
-    fn(_id)
+    fn(USize(2))
 
     _ctx.each_token(fn)
 

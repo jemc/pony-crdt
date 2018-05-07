@@ -12,26 +12,18 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
 
   See the docs for the DotKernel class for more information.
   """
-  let _id: ID
   embed _ctx: _DotContext
   embed _map: Map[ID, (U32, A)]
 
   new create(id': ID) =>
     """
     Instantiate under the given unique replica id.
-    
+
     It will only be possible to add dotted values under this replica id,
     aside from converging it as external data with the `converge` function.
     """
-    _id  = id'
-    _ctx = _ctx.create()
+    _ctx = _ctx.create(id')
     _map = _map.create()
-
-  fun id(): ID =>
-    """
-    Return the replica id used to instantiate this kernel.
-    """
-    _id
 
   fun values(): Iterator[A]^ =>
     """
@@ -52,7 +44,7 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     The next-sequence-numbered dot for this replica will be used, so that the
     new value has a happens-after causal relationship with the previous value.
     """
-    let dot = _ctx.next_dot(_id)
+    let dot = _ctx.next_dot()
     _map(dot._1) = (dot._2, value')
     delta'._map(dot._1) = (dot._2, value')
     delta'._ctx.set(dot)
@@ -64,9 +56,12 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     delta': D = recover DotKernelSingle[A](0) end)
   : D^ =>
     """
-    Update the 
+    Update the value for this replica in the map of active values,
+    using a function to define the strategy for updating an existing value.
+    The next-sequence-numbered dot for this replica will be used, so that the
+    new value has a happens-after causal relationship with the previous value.
     """
-    let value = try fn'(_map(_id)?._2, value') else value' end
+    let value = try fn'(_map(_ctx.id())?._2, value') else value' end
     update(value, delta')
 
   fun ref remove_value[
@@ -188,9 +183,7 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
-
-    _id = that.next[ID]()?
+    if that.next_count()? != 2 then error end
 
     _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
 
@@ -210,9 +203,7 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(USize(3))
-
-    fn(_id)
+    fn(USize(2))
 
     _ctx.each_token(fn)
 

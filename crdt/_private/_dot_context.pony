@@ -25,12 +25,26 @@ class ref _DotContext is Convergent[_DotContext]
   When enough dots are accumulated into the _dot_cloud to be consecutive
   with the current threshold of _complete history, they can compacted into it.
   """
+  let _id: ID
   embed _complete:  Map[ID, U32]
   embed _dot_cloud: HashSet[_Dot, _DotHashFn]
 
-  new ref create() =>
+  new ref create(id': ID) =>
+    """
+    Instantiate under the given unique replica id.
+
+    It will only be possible to add dots values under this replica id,
+    aside from converging it as external data with the `converge` function.
+    """
+    _id        = id'
     _complete  = _complete.create()
     _dot_cloud = _dot_cloud.create()
+
+  fun id(): ID =>
+    """
+    Return the replica id used to instantiate this context.
+    """
+    _id
 
   fun contains(dot: _Dot): Bool =>
     """
@@ -62,11 +76,11 @@ class ref _DotContext is Convergent[_DotContext]
 
       let remove_dots = Array[_Dot]
       for dot in _dot_cloud.values() do
-        (let id, let n) = dot
-        let n' = _complete.get_or_else(id, 0)
+        (let id', let n) = dot
+        let n' = _complete.get_or_else(id', 0)
 
         if n == (n' + 1) then // this dot has the next sequence number
-          _complete(id) = n
+          _complete(id') = n
           remove_dots.push(dot)
           keep_compacting = true
         elseif n <= n' then // this dot is present/outdated
@@ -76,23 +90,24 @@ class ref _DotContext is Convergent[_DotContext]
       _dot_cloud.remove(remove_dots.values())
     end
 
-  fun ref next_dot(id: ID): _Dot =>
+  fun ref next_dot(): _Dot =>
     """
-    Update the _complete with the next sequence number for the given ID,
+    Update _complete with the next sequence number for the local replica ID,
     also returning the resulting dot.
 
-    WARNING: This is only valid when there are no dots for it in _dot_cloud,
-    meaning that this should only be used with the id of the local replica,
-    and any `set` calls with `compact_now = false` must be followed `compact`
-    before calling this function.
+    This is only valid when there are no dots for it in _dot_cloud, so that's
+    why it can only be used with the id of the local replica.
+
+    WARNING: any `set` calls with `compact_now = false` must be followed
+    `compact` before calling this function.
 
     In the future, we want to consider refactoring this abstraction to make
     it more difficult to make a mistake that breaks these assumptions, using
     Pony idioms of having the type system prevent you from doing unsafe actions.
     """
     // TODO: consider the refactor mentioned in the docstring.
-    let n = try _complete.upsert(id, 1, {(n', _) => n' + 1 })? else 1 end
-    (id, n)
+    let n = try _complete.upsert(_id, 1, {(n', _) => n' + 1 })? else 1 end
+    (_id, n)
 
   fun ref set(dot: _Dot, compact_now: Bool = true) =>
     """
@@ -115,9 +130,9 @@ class ref _DotContext is Convergent[_DotContext]
     """
     var changed = false
 
-    for (id, n) in that._complete.pairs() do
-      if n > _complete.get_or_else(id, 0) then
-        _complete(id) = n
+    for (id', n) in that._complete.pairs() do
+      if n > _complete.get_or_else(id', 0) then
+        _complete(id') = n
         changed = true
       end
     end
@@ -142,15 +157,15 @@ class ref _DotContext is Convergent[_DotContext]
     """
     let out = recover String end
     out.append("(_DotContext")
-    for (id, n) in _complete.pairs() do
+    for (id', n) in _complete.pairs() do
       out.>push(';').>push(' ')
-      out.append(id.string())
+      out.append(id'.string())
       out.>push(' ').>push('<').>push('=').>push(' ')
       out.append(n.string())
     end
-    for (id, n) in _dot_cloud.values() do
+    for (id', n) in _dot_cloud.values() do
       out.>push(';').>push(' ')
-      out.append(id.string())
+      out.append(id'.string())
       out.>push(' ').>push('=').>push('=').>push(' ')
       out.append(n.string())
     end
@@ -161,7 +176,9 @@ class ref _DotContext is Convergent[_DotContext]
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 2 then error end
+    if that.next_count()? != 3 then error end
+
+    _id = that.next[ID]()?
 
     var complete_count = that.next_count()?
     if (complete_count % 2) != 0 then error end
@@ -190,17 +207,19 @@ class ref _DotContext is Convergent[_DotContext]
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(USize(2))
+    fn(USize(3))
+
+    fn(_id)
 
     fn(_complete.size() * 2)
-    for (id, n) in _complete.pairs() do
-      fn(id)
+    for (id', n) in _complete.pairs() do
+      fn(id')
       fn(n)
     end
 
     fn(_dot_cloud.size() * 2)
-    for (id, n) in _dot_cloud.values() do
-      fn(id)
+    for (id', n) in _dot_cloud.values() do
+      fn(id')
       fn(n)
     end
 
