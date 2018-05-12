@@ -12,7 +12,7 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
 
   See the docs for the DotKernel class for more information.
   """
-  embed _ctx: _DotContext
+  let _ctx: DotContext
   embed _map: Map[ID, (U32, A)]
 
   new create(id': ID) =>
@@ -24,6 +24,27 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     """
     _ctx = _ctx.create(id')
     _map = _map.create()
+
+  new create_in(ctx': DotContext) =>
+    """
+    Instantiate under the given DotContext.
+    """
+    _ctx = ctx'
+    _map = _map.create()
+
+  fun context(): this->DotContext =>
+    """
+    Get the underlying DotContext.
+    """
+    _ctx
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values recorded from any replica.
+    This is true at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _map.size() == 0
 
   fun values(): Iterator[A]^ =>
     """
@@ -150,7 +171,42 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
 
     // Finally, catch up on the entire history of dots that the other kernel
     // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
     if _ctx.converge(that._ctx) then
+      changed = true
+    end
+
+    changed
+
+  fun ref converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    var changed = false
+
+    // Active values that now exist only in our kernel but were already seen
+    // by that kernel's history of dots should be removed from our map.
+    let removables: Array[ID] = []
+    for (id', (n, value)) in _map.pairs() do
+      let dot = (id', n)
+      if ctx'.contains(dot) then
+        removables.push(id')
+        changed = true
+      end
+    end
+    for id' in removables.values() do try _map.remove(id')? end end
+
+    // Finally, catch up on the entire history of dots that the other kernel
+    // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
+    if _ctx.converge(ctx') then
       changed = true
     end
 

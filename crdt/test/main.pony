@@ -50,6 +50,10 @@ actor Main is TestList
     test(TestUJSONTokens)
     test(TestUJSONNode)
 
+    test(TestCKeyspace)
+    test(TestCKeyspaceDelta)
+    test(TestCKeyspaceTokens)
+
     test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncProperty))
     test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncDecProperty))
     test(Property1UnitTest[(USize, Array[_CmdOnReplica[U64]])](GCounterIncProperty))

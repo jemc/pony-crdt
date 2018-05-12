@@ -1,10 +1,10 @@
 use ".."
 use "collections"
 
-class ref _DotContext is Convergent[_DotContext]
+class ref DotContext is Convergent[DotContext]
   """
-  This data structure is used internally by DotKernel.
-  There shouldn't realy be a reason to use it outside of that context,
+  This data structure is used internally.
+  There shouldn't really be a reason to use it outside of that context,
   and be aware that if you do, there are unsound patterns of use to avoid.
   See the rest of the docstrings in this file for more information.
 
@@ -28,6 +28,7 @@ class ref _DotContext is Convergent[_DotContext]
   let _id: ID
   embed _complete:  Map[ID, U32]
   embed _dot_cloud: HashSet[_Dot, _DotHashFn]
+  var _converge_disabled: Bool = false
 
   new ref create(id': ID) =>
     """
@@ -39,6 +40,12 @@ class ref _DotContext is Convergent[_DotContext]
     _id        = id'
     _complete  = _complete.create()
     _dot_cloud = _dot_cloud.create()
+
+  fun clone(): DotContext =>
+    let that = create(_id)
+    for (k, v) in _complete.pairs() do that._complete(k) = v end
+    for d in _dot_cloud.values() do that._dot_cloud.set(d) end
+    that
 
   fun id(): ID =>
     """
@@ -121,13 +128,17 @@ class ref _DotContext is Convergent[_DotContext]
     _dot_cloud.set(dot)
     if compact_now then compact() end
 
-  fun ref converge(that: _DotContext box): Bool =>
+  fun ref set_converge_disabled(value': Bool) => _converge_disabled = value'
+
+  fun ref converge(that: DotContext box): Bool =>
     """
     Add all dots from that causal history into this one.
 
     The consecutive ranges in _complete can be updated to the maximum range.
     The _dot_cloud can be updated by taking the union of the two sets.
     """
+    if _converge_disabled then return false end
+
     var changed = false
 
     for (id', n) in that._complete.pairs() do
@@ -156,7 +167,7 @@ class ref _DotContext is Convergent[_DotContext]
     This is intended for debugging purposes only.
     """
     let out = recover String end
-    out.append("(_DotContext")
+    out.append("(DotContext")
     for (id', n) in _complete.pairs() do
       out.>push(';').>push(' ')
       out.append(id'.string())

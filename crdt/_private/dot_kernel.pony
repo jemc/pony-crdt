@@ -8,7 +8,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
   It contains a "dot context", which is used to track a logical remembrance
   of all changes we've generated and observed. Each is represented by a "dot",
   where the dot is a unique replica identifier and a sequence number.
-  See docs for the _DotContext type for more information on how this works.
+  See docs for the DotContext type for more information on how this works.
 
   We also maintain a map of "active" values - those we wish to retain for
   inclusion in the calculation of the result value, using whatever semantics
@@ -30,7 +30,7 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
   If you wish to always keep only the latest causal active value per replica,
   prefer using the DotKernelSingle class instead of this one.
   """
-  embed _ctx: _DotContext
+  let _ctx: DotContext
   embed _map: HashMap[_Dot, A, _DotHashFn]
 
   new create(id': ID) =>
@@ -42,6 +42,27 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     """
     _ctx = _ctx.create(id')
     _map = _map.create()
+
+  new create_in(ctx': DotContext) =>
+    """
+    Instantiate under the given DotContext.
+    """
+    _ctx = ctx'
+    _map = _map.create()
+
+  fun context(): this->DotContext =>
+    """
+    Get the underlying DotContext.
+    """
+    _ctx
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values recorded from any replica.
+    This is true at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _map.size() == 0
 
   fun values(): Iterator[A]^ =>
     """
@@ -150,7 +171,41 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
 
     // Finally, catch up on the entire history of dots that the other kernel
     // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
     if _ctx.converge(that._ctx) then
+      changed = true
+    end
+
+    changed
+
+  fun ref converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    var changed = false
+
+    // Active values that now exist only in our kernel but were already seen
+    // by that kernel's history of dots should be removed from our map.
+    let removables: Array[_Dot] = []
+    for dot in _map.keys() do
+      if ctx'.contains(dot) then
+        removables.push(dot)
+        changed = true
+      end
+    end
+    for dot' in removables.values() do try _map.remove(dot')? end end
+
+    // Finally, catch up on the entire history of dots that the other kernel
+    // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
+    if _ctx.converge(ctx') then
       changed = true
     end
 
@@ -247,4 +302,3 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     Serialize an instance of this data structure to a stream of tokens.
     """
     Tokens[(ID | U32 | A)].to_tokens(this)
-

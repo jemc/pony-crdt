@@ -8,7 +8,7 @@ type AWORSetIs[A: (Hashable val & Equatable[A])]
   is AWORHashSet[A, HashIs[A]]
 
 class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
-  is (Comparable[AWORHashSet[A, H]] & Convergent[AWORHashSet[A, H]])
+  is (Comparable[AWORHashSet[A, H]] & Causal[AWORHashSet[A, H]])
   """
   An unordered mutable set that supports removing locally visible elements
   ("observed remove") using per-replica sequence numbers to track causality.
@@ -31,7 +31,21 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     """
     Instantiate under the given unique replica id.
     """
-    _kernel = DotKernel[A](id)
+    _kernel = _kernel.create(id)
+
+  new ref _create_in(ctx': DotContext) =>
+    _kernel = _kernel.create_in(ctx')
+
+  fun _context(): this->DotContext =>
+    _kernel.context()
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values recorded from any replica.
+    This is true at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _kernel.is_empty()
 
   fun result(): HashSet[A, H] =>
     """
@@ -110,6 +124,13 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     Returns true if the convergence added new information to the data structure.
     """
     _kernel.converge(that._kernel)
+
+  fun ref _converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    _kernel.converge_empty_in(ctx')
 
   fun string(): String iso^ =>
     """

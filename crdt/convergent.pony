@@ -1,4 +1,4 @@
-trait Convergent[A: Convergent[A] #read]
+interface Convergent[A: Convergent[A] #read]
   fun ref converge(that: box->A): Bool
     """
     Converge from that data structure into this one, mutating this one.

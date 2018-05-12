@@ -1,6 +1,6 @@
 use "_private"
 
-class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
+class ref UJSON is (Equatable[UJSON] & Causal[UJSON])
   """
   UJSON is a subset of JSON that contains only unordered data structures.
   In effect, UJSON data acts like multi-value registers (MVReg) inside
@@ -39,7 +39,21 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
     """
     Instantiate under the given unique replica id.
     """
-    _kernel = DotKernel[(Array[String] val, UJSONValue)](id)
+    _kernel = _kernel.create(id)
+
+  new ref _create_in(ctx': DotContext) =>
+    _kernel = _kernel.create_in(ctx')
+
+  fun _context(): this->DotContext =>
+    _kernel.context()
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values recorded from any replica.
+    This is true both at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _kernel.is_empty()
 
   fun get(path': Array[String] val = []): UJSONNode =>
     """
@@ -81,8 +95,8 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
     _kernel.set((path', value'), delta'._kernel)
     delta'
 
-  fun ref clear[D: UJSON ref = UJSON](
-    path': Array[String] val = [],
+  fun ref clear_at[D: UJSON ref = UJSON](
+    path': Array[String] val,
     delta': D = recover UJSON(0) end)
   : D^ =>
     """
@@ -119,12 +133,27 @@ class ref UJSON is (Equatable[UJSON] & Convergent[UJSON])
     _kernel.remove_value[_UJSONEq]((path', value'), delta'._kernel)
     delta'
 
+  fun ref clear[D: UJSON ref = UJSON](delta': D = recover UJSON(0) end): D^ =>
+    """
+    Remove all locally visible values, across all paths.
+    Accepts and returns a convergent delta-state.
+    """
+    _kernel.remove_all(delta'._kernel)
+    delta'
+
   fun ref converge(that: UJSON box): Bool =>
     """
     Converge from the given AWORSet into this one.
     Returns true if the convergence added new information to the data structure.
     """
     _kernel.converge(that._kernel)
+
+  fun ref _converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    _kernel.converge_empty_in(ctx')
 
   fun string(): String iso^ =>
     """
