@@ -1,14 +1,20 @@
 use "collections"
 use "_private"
 
-type CKeyspace[K: (Hashable & Equatable[K] val), V: Causal[V] ref]
+type CKeyspace[
+  K: (Hashable & Equatable[K] val),
+  V: (Convergent[V] ref & Replicated ref)]
   is HashCKeyspace[K, V, HashEq[K]]
 
-type CKeyspaceIs[K: Any val, V: Causal[V] ref]
+type CKeyspaceIs[
+  K: Any val,
+  V: (Convergent[V] ref & Replicated ref)]
   is HashCKeyspace[K, V, HashIs[K]]
 
-class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
-  is Causal[HashCKeyspace[K, V, H]]
+class ref HashCKeyspace[
+  K: Any val,
+  V: (Convergent[V] ref & Replicated ref),
+  H: HashFunction[K] val]
 
   let _ctx: DotContext
   embed _map: HashMap[K, V, H]
@@ -31,23 +37,24 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
       empty
     end
 
-  fun ref remove[D: HashCKeyspace[K, V, H] ref = HashCKeyspace[K, V, H] ref]
-    (k: K, delta': D = recover D(0) end): D
-  =>
-    try
-      let v = _map.remove(k)?._2
-      delta'.at(k).converge(v.clear())
-    end
-    consume delta'
+  // TODO: Find a way to bring remove functionality back?
+  // fun ref remove[D: HashCKeyspace[K, V, H] ref = HashCKeyspace[K, V, H] ref]
+  //   (k: K, delta': D = recover D(0) end): D
+  // =>
+  //   try
+  //     let v = _map.remove(k)?._2
+  //     delta'.at(k).converge(v.clear())
+  //   end
+  //   consume delta'
 
-  fun ref clear[D: HashCKeyspace[K, V, H] ref = HashCKeyspace[K, V, H] ref]
-    (delta': D = recover D(0) end): D
-  =>
-    for (k, v) in _map.pairs() do
-      delta'.at(k).converge(v.clear())
-    end
-    _map.clear()
-    consume delta'
+  // fun ref clear[D: HashCKeyspace[K, V, H] ref = HashCKeyspace[K, V, H] ref]
+  //   (delta': D = recover D(0) end): D
+  // =>
+  //   for (k, v) in _map.pairs() do
+  //     delta'.at(k).converge(v.clear())
+  //   end
+  //   _map.clear()
+  //   consume delta'
 
   fun ref converge(that: HashCKeyspace[K, V, H] box): Bool =>
     var changed = false
@@ -58,17 +65,18 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     // because their converge logic rely on converging the context last.
     let converge_disabled = _ctx.set_converge_disabled(true)
 
-    // For each entry that exists only here, and not in that keyspace,
-    // converge an imaginary empty instance into our local instance.
-    // This is how removals are propagated.
-    // TODO: Ouch! This seems very inefficient to do as described in the paper.
-    // How can we improve on this model, maybe sacrificing some failure modes?
-    for (k, v) in _map.pairs() do
-      if not that._map.contains(k) then
-        if v._converge_empty_in(that._ctx) then changed = true end
-        if v.is_empty() then try _map.remove(k)? end end
-      end
-    end
+    // TODO: Find a way to bring remove functionality back?
+    // // For each entry that exists only here, and not in that keyspace,
+    // // converge an imaginary empty instance into our local instance.
+    // // This is how removals are propagated.
+    // // TODO: Ouch! This seems very inefficient to do as described in the paper.
+    // // How can we improve on this model, maybe sacrificing some failure modes?
+    // for (k, v) in _map.pairs() do
+    //   if not that._map.contains(k) then
+    //     if v._converge_empty_in(that._ctx) then changed = true end
+    //     if v.is_empty() then try _map.remove(k)? end end
+    //   end
+    // end
 
     // For each entry in the other map, converge locally.
     // If this results in an empty data structure, remove it to save memory.
