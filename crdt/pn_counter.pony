@@ -1,7 +1,7 @@
 use "collections"
 
 class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
-  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]])
+  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]] & Replicated)
   """
   A mutable counter, which can be both increased and decreased.
 
@@ -148,7 +148,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(USize(3))
 

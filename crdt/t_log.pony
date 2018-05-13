@@ -2,7 +2,7 @@ class ref TLog[
   A: Comparable[A] val,
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[TLog[A, T, B]] & Convergent[TLog[A, T, B]])
+  is (Equatable[TLog[A, T, B]] & Convergent[TLog[A, T, B]] & Replicated)
   """
   A sorted list of ordered log entries, each with a value and logical timestamp.
   (U64 by default, though it may be any unsigned integer type). The list of
@@ -314,7 +314,7 @@ class ref TLog[
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(1 + (_values.size() * 2))
     tokens.push(_cutoff)

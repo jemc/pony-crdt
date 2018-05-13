@@ -1,7 +1,8 @@
 use ".."
 use "collections"
 
-class ref DotKernelSingle[A: Any val] is Convergent[DotKernelSingle[A]]
+class ref DotKernelSingle[A: Any val]
+  is (Convergent[DotKernelSingle[A]] & Replicated)
   """
   This class is a reusable abstraction meant for use inside other CRDTs.
 
@@ -257,7 +258,7 @@ class ref DotKernelSingle[A: Any val] is Convergent[DotKernelSingle[A]]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(USize(2))
 

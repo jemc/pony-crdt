@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotKernel[A: Any val] is Convergent[DotKernel[A]]
+class ref DotKernel[A: Any val] is (Convergent[DotKernel[A]] & Replicated)
   """
   This class is a reusable abstraction meant for use inside other CRDTs.
 
@@ -274,13 +274,13 @@ class ref DotKernel[A: Any val] is Convergent[DotKernel[A]]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     each_token_map(tokens, {(tokens, a) => tokens.push(a) })
 
   fun ref each_token_map(tokens: Tokens, a_fn: {(Tokens, A)} val) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens,
+    Serialize the data structure, capturing each token into the given Tokens.
     using a custom function for serializing the A type as one or more B tokens.
     """
     tokens.push(USize(2))

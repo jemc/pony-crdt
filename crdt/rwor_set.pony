@@ -195,6 +195,6 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     _kernel.each_token(tokens)

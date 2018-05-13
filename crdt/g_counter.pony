@@ -1,7 +1,7 @@
 use "collections"
 
 class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
-  is (Comparable[GCounter[A]] & Convergent[GCounter[A]])
+  is (Comparable[GCounter[A]] & Convergent[GCounter[A]] & Replicated)
   """
   A mutable grow-only counter. That is, the value can only be increased.
 
@@ -119,7 +119,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(1 + (_data.size() * 2))
     tokens.push(_id)

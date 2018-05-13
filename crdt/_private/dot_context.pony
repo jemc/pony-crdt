@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotContext is Convergent[DotContext]
+class ref DotContext is (Convergent[DotContext] & Replicated)
   """
   This data structure is used internally.
   There shouldn't really be a reason to use it outside of that context,
@@ -230,7 +230,7 @@ class ref DotContext is Convergent[DotContext]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     if _converge_disabled then
       tokens.push(USize(0))

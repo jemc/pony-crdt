@@ -5,7 +5,7 @@ type GSet[A: (Hashable val & Equatable[A])] is GHashSet[A, HashEq[A]]
 type GSetIs[A: Any val] is GHashSet[A, HashIs[A]]
 
 class ref GHashSet[A: Any val, H: HashFunction[A] val]
-  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]])
+  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]] & Replicated)
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
 
@@ -115,7 +115,7 @@ class ref GHashSet[A: Any val, H: HashFunction[A] val]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(_data.size())
     for value in _data.values() do tokens.push(value) end

@@ -14,7 +14,7 @@ class ref TReg[
   V: _DefaultValueFn[A] val,
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[TReg[A, V, T, B]] & Convergent[TReg[A, V, T, B]])
+  is (Equatable[TReg[A, V, T, B]] & Convergent[TReg[A, V, T, B]] & Replicated)
   """
   A mutable register with last-write-wins semantics for updating the value.
   That is, every update operation includes a logical timestamp (U64 by default,
@@ -139,7 +139,7 @@ class ref TReg[
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(USize(2))
     tokens.push(_value)

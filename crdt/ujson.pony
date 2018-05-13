@@ -186,7 +186,7 @@ class ref UJSON is (Equatable[UJSON] & Causal[UJSON])
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     _kernel.each_token_map(tokens, {(tokens, a) =>
       (let path, let value) = a

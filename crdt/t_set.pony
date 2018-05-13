@@ -19,7 +19,8 @@ class ref THashSet[
   H: HashFunction[A] val]
   is
   ( Comparable[THashSet[A, T, B, H]]
-  & Convergent[THashSet[A, T, B, H]] )
+  & Convergent[THashSet[A, T, B, H]]
+  & Replicated)
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -262,7 +263,7 @@ class ref THashSet[
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(_data.size() * 3)
     for (k, (t, b)) in _data.pairs() do

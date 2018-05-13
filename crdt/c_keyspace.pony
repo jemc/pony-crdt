@@ -157,7 +157,7 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(USize(2))
 

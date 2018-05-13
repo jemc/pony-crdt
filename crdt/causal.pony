@@ -1,6 +1,6 @@
 use "_private"
 
-interface Causal[A: Causal[A] ref] is Convergent[A]
+interface Causal[A: Causal[A] ref] is (Convergent[A] & Replicated)
   new ref create(id: ID)
   new ref _create_in(ctx: DotContext)
   fun _context(): this->DotContext

@@ -5,7 +5,7 @@ type P2Set[A: (Hashable val & Equatable[A])] is P2HashSet[A, HashEq[A]]
 type P2SetIs[A: Any val] is P2HashSet[A, HashIs[A]]
 
 class ref P2HashSet[A: Any val, H: HashFunction[A] val]
-  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]])
+  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]] & Replicated)
   """
   An unordered mutable two-phase set that supports one-time removal.
   That is, once an element has been deleted it may never be inserted again.
@@ -167,7 +167,7 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
 
   fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
     tokens.push(USize(2))
 
