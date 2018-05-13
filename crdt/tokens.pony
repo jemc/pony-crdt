@@ -7,7 +7,7 @@ class Tokens
   new ref create() => None
   fun ref push(a: Any val) => array.push(a)
   fun ref from(s: _TokensSource) => s.each_token(this)
-  fun ref iterator(): TokensIterator => _TokensIterator(array.values())
+  fun iterator(): TokensIterator => _TokensIterator(array.values())
 
 interface TokensIterator
   fun ref next[A: Any val](): A?
