@@ -1,5 +1,5 @@
-interface box _TokensSource
-  fun each_token(tokens: Tokens)
+interface ref _TokensSource
+  fun ref each_token(tokens: Tokens)
 
 class Tokens
   embed array: Array[Any val] = array.create()

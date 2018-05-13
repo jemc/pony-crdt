@@ -272,13 +272,13 @@ class ref DotKernel[A: Any val] is Convergent[DotKernel[A]]
       _map.update((that.next[ID]()?, that.next[U32]()?), a_fn(that)?)
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
     each_token_map(tokens, {(tokens, a) => tokens.push(a) })
 
-  fun each_token_map(tokens: Tokens, a_fn: {(Tokens, A)} val) =>
+  fun ref each_token_map(tokens: Tokens, a_fn: {(Tokens, A)} val) =>
     """
     Call the given function for each token, serializing as a sequence of tokens,
     using a custom function for serializing the A type as one or more B tokens.

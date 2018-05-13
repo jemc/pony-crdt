@@ -184,7 +184,7 @@ class ref UJSON is (Equatable[UJSON] & Causal[UJSON])
       (consume path, value)
     })?
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

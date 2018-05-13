@@ -128,7 +128,16 @@ class ref DotContext is Convergent[DotContext]
     _dot_cloud.set(dot)
     if compact_now then compact() end
 
-  fun ref set_converge_disabled(value': Bool) => _converge_disabled = value'
+  fun ref set_converge_disabled(value': Bool): Bool =>
+    """
+    Set the new value of the _converge_disabled field, returning the old value.
+    
+    While _converge_disabled is true, the following methods will be no-ops:
+    converge, from_tokens, each_token.
+    
+    This is used in situations where the context is shared by many instances.
+    """
+    _converge_disabled = value'
 
   fun ref converge(that: DotContext box): Bool =>
     """
@@ -187,6 +196,11 @@ class ref DotContext is Convergent[DotContext]
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
+    if _converge_disabled then
+      if that.next[USize]()? != 0 then error end
+      return
+    end
+
     if that.next[USize]()? != 3 then error end
 
     _id = that.next[ID]()?
@@ -214,10 +228,15 @@ class ref DotContext is Convergent[DotContext]
       )
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
+    if _converge_disabled then
+      tokens.push(USize(0))
+      return
+    end
+
     tokens.push(USize(3))
 
     tokens.push(_id)

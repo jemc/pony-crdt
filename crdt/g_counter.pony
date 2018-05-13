@@ -117,7 +117,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
       _data.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

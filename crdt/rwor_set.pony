@@ -193,7 +193,7 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     """
     _kernel.from_tokens(that)?
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

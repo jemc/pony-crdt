@@ -255,7 +255,7 @@ class ref DotKernelSingle[A: Any val] is Convergent[DotKernelSingle[A]]
       )
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

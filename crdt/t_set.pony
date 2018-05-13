@@ -260,7 +260,7 @@ class ref THashSet[
       _data.update(that.next[A]()?, (that.next[T]()?, that.next[Bool]()?))
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

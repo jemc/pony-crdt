@@ -5,3 +5,6 @@ interface Convergent[A: Convergent[A] #read]
     The other data structure may be either a delta-state or a complete state.
     Returns true if the convergence added new information to the data structure.
     """
+  
+  fun ref from_tokens(that: TokensIterator)?
+  fun ref each_token(tokens: Tokens)

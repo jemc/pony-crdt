@@ -137,7 +137,7 @@ class ref TReg[
     _value     = that.next[A]()?
     _timestamp = that.next[T]()?
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """

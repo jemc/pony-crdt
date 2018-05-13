@@ -1,5 +1,6 @@
 use "ponytest"
 use ".."
+use "debug"
 
 class TestCKeyspace is UnitTest
   new iso create() => None
@@ -138,4 +139,33 @@ class TestCKeyspaceTokens is UnitTest
   fun name(): String => "crdt.CKeyspace (tokens)"
 
   fun apply(h: TestHelper) =>
-    None // TODO
+    let data   = CKeyspace[String, CCounter[U8]]("a".hash64())
+    let data'  = CKeyspace[String, CCounter[U8]]("b".hash64())
+    let data'' = CKeyspace[String, CCounter[U8]]("c".hash64())
+
+    data.at("apple").increment(4)
+    data'.at("apple").decrement(5)
+    data''.at("apple").increment(6)
+
+    data.converge(data')
+    data.converge(data'')
+
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
+    for t' in tokens.array.values() do
+      match t'
+      | let t: USize => Debug("USize(" + t.string() + ")")
+      | let t: Stringable val => Debug(t.string())
+      else
+        Debug("?")
+      end
+    end
+
+    try
+      h.assert_eq[String](
+        data.string(),
+        data.create(0) .> from_tokens(tokens.iterator())?.string()
+      )
+    else
+      h.fail("failed to parse token stream")
+    end

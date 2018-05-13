@@ -56,7 +56,7 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     // Each of the inner CRDTs will try to converge their context,
     // but we can't allow this when the context is shared,
     // because their converge logic rely on converging the context last.
-    _ctx.set_converge_disabled(true)
+    let converge_disabled = _ctx.set_converge_disabled(true)
 
     // For each entry that exists only here, and not in that keyspace,
     // converge an imaginary empty instance into our local instance.
@@ -79,7 +79,7 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     end
 
     // Re-enable converge for the context, then converge it.
-    _ctx.set_converge_disabled(false)
+    _ctx.set_converge_disabled(converge_disabled)
     if _ctx.converge(that._ctx) then changed = true end
 
     changed
@@ -91,7 +91,7 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     // Each of the inner CRDTs will try to converge their context,
     // but we can't allow this when the context is shared,
     // because their converge logic rely on converging the context last.
-    _ctx.set_converge_disabled(true)
+    let converge_disabled = _ctx.set_converge_disabled(true)
 
     // For each entry that exists only here, and not in that keyspace,
     // converge an imaginary empty instance into our local instance.
@@ -103,7 +103,7 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     end
 
     // Re-enable converge for the context, then converge it.
-    _ctx.set_converge_disabled(false)
+    _ctx.set_converge_disabled(converge_disabled)
     if _ctx.converge(ctx') then changed = true end
 
     changed
@@ -133,3 +133,42 @@ class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
     end
     buf.push('}')
     consume buf
+
+  fun ref from_tokens(that: TokensIterator)? =>
+    """
+    Deserialize an instance of this data structure from a stream of tokens.
+    """
+    if that.next[USize]()? != 2 then error end
+
+    _ctx.from_tokens(that)?
+
+    let converge_disabled = _ctx.set_converge_disabled(true)
+
+    var count = that.next[USize]()?
+    if (count % 2) != 0 then error end
+    count = count / 2
+
+    // TODO: _map.reserve(count)
+    while (count = count - 1) > 0 do
+      _map.update(that.next[K]()?, V._create_in(_ctx) .> from_tokens(that)?)
+    end
+
+    _ctx.set_converge_disabled(converge_disabled)
+
+  fun ref each_token(tokens: Tokens) =>
+    """
+    Call the given function for each token, serializing as a sequence of tokens.
+    """
+    tokens.push(USize(2))
+
+    _ctx.each_token(tokens)
+
+    let converge_disabled = _ctx.set_converge_disabled(true)
+
+    tokens.push(_map.size() * 2)
+    for (k, v) in _map.pairs() do
+      tokens.push(k)
+      v.each_token(tokens)
+    end
+
+    _ctx.set_converge_disabled(converge_disabled)

@@ -165,7 +165,7 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
       _del.set(that.next[A]()?)
     end
 
-  fun each_token(tokens: Tokens) =>
+  fun ref each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
