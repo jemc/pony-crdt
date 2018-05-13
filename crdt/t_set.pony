@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 type TSet[
@@ -56,6 +57,18 @@ class ref THashSet[
 
   new ref create() =>
     _data = HashMap[A, (T, Bool), H]
+
+  new ref _create_in(ctx: DotContext) => // ignore the context
+    _data = _data.create()
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun size(): USize =>
     """

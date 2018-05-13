@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotContext is (Convergent[DotContext] & Replicated)
+class ref DotContext is Replicated
   """
   This data structure is used internally.
   There shouldn't really be a reason to use it outside of that context,

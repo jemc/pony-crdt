@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
@@ -34,6 +35,19 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     """
     _id   = id'
     _data = Map[ID, A]
+
+  new ref _create_in(ctx: DotContext) => // ignore the context, just use the id
+    _id   = ctx.id()
+    _data = _data.create()
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun apply(): A =>
     """

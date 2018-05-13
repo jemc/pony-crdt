@@ -1,3 +1,5 @@
+use "_private"
+
 type TRegString[
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
@@ -40,6 +42,18 @@ class ref TReg[
   var _timestamp: T = T.from[U8](0)
 
   new ref create() => None
+
+  new ref _create_in(ctx: DotContext) => // ignore the context
+    None
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _timestamp == T.from[U8](0)
 
   fun apply(): A =>
     """

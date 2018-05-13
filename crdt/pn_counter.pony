@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
@@ -30,8 +31,22 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     Instantiate the PNCounter under the given unique replica id.
     """
     _id  = id'
-    _pos = Map[ID, A]
-    _neg = Map[ID, A]
+    _pos = _pos.create()
+    _neg = _neg.create()
+
+  new ref _create_in(ctx: DotContext) => // ignore the context, just use the id
+    _id  = ctx.id()
+    _pos = _pos.create()
+    _neg = _neg.create()
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    (_pos.size() == 0) and (_neg.size() == 0)
 
   fun apply(): A =>
     """

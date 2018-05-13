@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 type P2Set[A: (Hashable val & Equatable[A])] is P2HashSet[A, HashEq[A]]
@@ -27,6 +28,19 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
   new ref create() =>
     _ins = HashSet[A, H]
     _del = HashSet[A, H]
+
+  new ref _create_in(ctx: DotContext) => // ignore the context
+    _ins = _ins.create()
+    _del = _del.create()
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    (_ins.size() == 0) and (_del.size() == 0)
 
   fun ref _ins_set(value: A) => _ins.set(value)
   fun ref _del_set(value: A) => _del.set(value)

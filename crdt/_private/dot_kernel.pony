@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotKernel[A: Any val] is (Convergent[DotKernel[A]] & Replicated)
+class ref DotKernel[A: Any val] is Replicated
   """
   This class is a reusable abstraction meant for use inside other CRDTs.
 

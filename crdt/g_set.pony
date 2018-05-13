@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 type GSet[A: (Hashable val & Equatable[A])] is GHashSet[A, HashEq[A]]
@@ -17,7 +18,19 @@ class ref GHashSet[A: Any val, H: HashFunction[A] val]
   embed _data: HashSet[A, H]
 
   new ref create() =>
-    _data = HashSet[A, H]
+    _data = _data.create()
+
+  new ref _create_in(ctx: DotContext) => // ignore the context
+    _data = _data.create()
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun ref _data_set(value: A) => _data.set(value)
 
