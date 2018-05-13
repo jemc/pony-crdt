@@ -25,7 +25,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: ID
+  var _id: ID
   embed _data: Map[ID, A]
 
   new ref create(id': ID) =>
@@ -99,11 +99,11 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: GCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: GCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[GCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if count < 1 then error end
     count = count - 1
@@ -112,26 +112,18 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     if (count % 2) != 0 then error end
     count = count / 2
 
-    _data = _data.create(count)
+    // TODO: _data.reserve(count)
     while (count = count - 1) > 0 do
       _data.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[GCounterToken[A]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(1 + (_data.size() * 2))
-    fn(_id)
+    tokens.push(1 + (_data.size() * 2))
+    tokens.push(_id)
     for (id, v) in _data.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
-
-  fun to_tokens(): TokenIterator[GCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[GCounterToken[A]].to_tokens(this)
-
-type GCounterToken[A] is (ID | A)

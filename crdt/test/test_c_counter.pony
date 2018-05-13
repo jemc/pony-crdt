@@ -139,12 +139,13 @@ class TestCCounterTokens is UnitTest
     data.converge(data')
     data.converge(data'')
 
-    _TestTokensWellFormed[(U64 | U32 | U8)](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[CCounter[U8]](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create(0) .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

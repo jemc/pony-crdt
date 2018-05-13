@@ -21,7 +21,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: ID
+  var _id: ID
   embed _pos: Map[ID, A]
   embed _neg: Map[ID, A]
 
@@ -120,56 +120,48 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: PNCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: PNCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[PNCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
+    if that.next[USize]()? != 3 then error end
 
     _id = that.next[ID]()?
 
-    var pos_count = that.next_count()?
+    var pos_count = that.next[USize]()?
     if (pos_count % 2) != 0 then error end
     pos_count = pos_count / 2
 
-    _pos = _pos.create(pos_count)
+    // TODO: _pos.reserve(pos_count)
     while (pos_count = pos_count - 1) > 0 do
       _pos.update(that.next[ID]()?, that.next[A]()?)
     end
 
-    var neg_count = that.next_count()?
+    var neg_count = that.next[USize]()?
     if (neg_count % 2) != 0 then error end
     neg_count = neg_count / 2
 
-    _neg = _neg.create(neg_count)
+    // TODO: _neg.reserve(neg_count)
     while (neg_count = neg_count - 1) > 0 do
       _neg.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[PNCounterToken[A]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(USize(3))
+    tokens.push(USize(3))
 
-    fn(_id)
+    tokens.push(_id)
 
-    fn(_pos.size() * 2)
+    tokens.push(_pos.size() * 2)
     for (id, v) in _pos.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
 
-    fn(_neg.size() * 2)
+    tokens.push(_neg.size() * 2)
     for (id, v) in _neg.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
-
-  fun to_tokens(): TokenIterator[PNCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[PNCounterToken[A]].to_tokens(this)
-
-type PNCounterToken[A] is (ID | A)

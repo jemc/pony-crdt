@@ -187,29 +187,14 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
   fun ge(that: RWORHashSet[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
-  new ref from_tokens(that: TokenIterator[RWORSetToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens_map[(A | Bool)](that, {(that)? =>
-      if that.next_count()? != 2 then error end
-      (that.next[A]()?, that.next[Bool]()?)
-    })?
+    _kernel.from_tokens(that)?
 
-  fun each_token(fn: {ref(Token[RWORSetToken[A]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    _kernel.each_token_map[(A | Bool)](fn, {(fn, a) =>
-      fn(USize(2))
-      fn(a._1)
-      fn(a._2)
-    })
-
-  fun to_tokens(): TokenIterator[RWORSetToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[RWORSetToken[A]].to_tokens(this)
-
-type RWORSetToken[A] is (ID | U32 | A | Bool)
+    _kernel.each_token(tokens)

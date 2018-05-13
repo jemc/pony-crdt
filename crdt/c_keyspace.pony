@@ -4,10 +4,10 @@ use "_private"
 type CKeyspace[K: (Hashable & Equatable[K] val), V: Causal[V] ref]
   is HashCKeyspace[K, V, HashEq[K]]
 
-type CKeyspaceIs[K: Any #share, V: Causal[V] ref]
+type CKeyspaceIs[K: Any val, V: Causal[V] ref]
   is HashCKeyspace[K, V, HashIs[K]]
 
-class ref HashCKeyspace[K: Any #share, V: Causal[V] ref, H: HashFunction[K] val]
+class ref HashCKeyspace[K: Any val, V: Causal[V] ref, H: HashFunction[K] val]
   is Causal[HashCKeyspace[K, V, H]]
 
   let _ctx: DotContext

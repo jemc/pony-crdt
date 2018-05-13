@@ -13,7 +13,7 @@ type TSetIs[
   is THashSet[A, T, B, HashIs[A]]
 
 class ref THashSet[
-  A: Any #share,
+  A: Any val,
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
   H: HashFunction[A] val]
@@ -246,35 +246,27 @@ class ref THashSet[
   fun timestamps(): Iterator[T]^ => map().values()
   fun pairs(): Iterator[(A, T)]^ => map().pairs()
 
-  new ref from_tokens(that: TokenIterator[TSetToken[A, T]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if (count % 3) != 0 then error end
     count = count / 3
 
-    _data = _data.create(count)
+    // TODO: _data.reserve(count)
     while (count = count - 1) > 0 do
       _data.update(that.next[A]()?, (that.next[T]()?, that.next[Bool]()?))
     end
 
-  fun each_token(fn: {ref(Token[TSetToken[A, T]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(_data.size() * 3)
+    tokens.push(_data.size() * 3)
     for (k, (t, b)) in _data.pairs() do
-      fn(k)
-      fn(t)
-      fn(b)
+      tokens.push(k)
+      tokens.push(t)
+      tokens.push(b)
     end
-
-  fun to_tokens(): TokenIterator[TSetToken[A, T]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[TSetToken[A, T]].to_tokens(this)
-
-type TSetToken[A, T] is (A | T | Bool)

@@ -164,12 +164,12 @@ class ref UJSON is (Equatable[UJSON] & Causal[UJSON])
   fun eq(that: UJSON box): Bool => get() == that.get()
   fun ne(that: UJSON box): Bool => not eq(that)
 
-  new ref from_tokens(that: TokenIterator[UJSONToken])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens_map[UJSONValue](that, {(that)? =>
-      var count = that.next_count()?
+    _kernel.from_tokens_map(that, {(that)? =>
+      var count = that.next[USize]()?
 
       if count < 1 then error end
       count = count - 1
@@ -184,21 +184,13 @@ class ref UJSON is (Equatable[UJSON] & Causal[UJSON])
       (consume path, value)
     })?
 
-  fun each_token(fn: {ref(Token[UJSONToken])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    _kernel.each_token_map[UJSONValue](fn, {(fn, a) =>
+    _kernel.each_token_map(tokens, {(tokens, a) =>
       (let path, let value) = a
-      fn(path.size() + 1)
-      for segment in path.values() do fn(segment) end
-      fn(value)
+      tokens.push(path.size() + 1)
+      for segment in path.values() do tokens.push(segment) end
+      tokens.push(value)
     })
-
-  fun to_tokens(): TokenIterator[UJSONToken] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[UJSONToken].to_tokens(this)
-
-type UJSONToken is (ID | U32 | UJSONValue)

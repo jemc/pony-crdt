@@ -294,11 +294,11 @@ class ref TLog[
       false
     end
 
-  new ref from_tokens(that: TokenIterator[TLogToken[A, T]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if count < 1 then error end
     count = count - 1
@@ -307,26 +307,18 @@ class ref TLog[
     if (count % 2) != 0 then error end
     count = count / 2
 
-    _values = _values.create(count)
+    // TODO: _values.reserve(count)
     while (count = count - 1) > 0 do
       _values.push((that.next[A]()?, that.next[T]()?))
     end
 
-  fun each_token(fn: {ref(Token[TLogToken[A, T]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(1 + (_values.size() * 2))
-    fn(_cutoff)
+    tokens.push(1 + (_values.size() * 2))
+    tokens.push(_cutoff)
     for (v, t) in _values.values() do
-      fn(v)
-      fn(t)
+      tokens.push(v)
+      tokens.push(t)
     end
-
-  fun to_tokens(): TokenIterator[TLogToken[A, T]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[TLogToken[A, T]].to_tokens(this)
-
-type TLogToken[A, T] is (A | T)

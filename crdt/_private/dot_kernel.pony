@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
+class ref DotKernel[A: Any val] is Convergent[DotKernel[A]]
   """
   This class is a reusable abstraction meant for use inside other CRDTs.
 
@@ -233,72 +233,63 @@ class ref DotKernel[A: Any #share] is Convergent[DotKernel[A]]
     out.append(_ctx.string())
     out
 
-  new ref from_tokens(that: TokenIterator[(ID | U32 | A)]) ? =>
+  fun ref from_tokens(that: TokensIterator) ? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 2 then error end
+    if that.next[USize]()? != 2 then error end
 
-    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
+    _ctx.from_tokens(that)?
 
-    var count = that.next_count()?
+    var count = that.next[USize]()?
     if (count % 3) != 0 then error end
     count = count / 3
 
-    _map = _map.create(count)
+    // TODO: _map.reserve(count)
     while (count = count - 1) > 0 do
       _map.update((that.next[ID]()?, that.next[U32]()?), that.next[A]()?)
     end
 
-  new ref from_tokens_map[B: Any #share](
-    that: TokenIterator[(ID | U32 | B)],
-    a_fn: {(TokenIterator[(ID | U32 | B)]): A?} val)
+  fun ref from_tokens_map(
+    that: TokensIterator,
+    a_fn: {(TokensIterator): A?} val)
     ?
   =>
     """
     Deserialize an instance of this data structure from a stream of tokens,
     using a custom function for deserializing the B tokens as instance(s) of A.
     """
-    if that.next_count()? != 2 then error end
+    if that.next[USize]()? != 2 then error end
 
-    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | B)].subset[(ID | U32)](that))?
+    _ctx.from_tokens(that)?
 
-    var count = that.next_count()?
+    var count = that.next[USize]()?
     if (count % 3) != 0 then error end
     count = count / 3
 
-    _map = _map.create(count)
+    // TODO: _map.reserve(count)
     while (count = count - 1) > 0 do
       _map.update((that.next[ID]()?, that.next[U32]()?), a_fn(that)?)
     end
 
-  fun each_token(fn: {ref(Token[(ID | U32 | A)])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    each_token_map[A](fn, {(fn, a) => fn(a) })
+    each_token_map(tokens, {(tokens, a) => tokens.push(a) })
 
-  fun each_token_map[B: Any #share](
-    fn: {ref(Token[(ID | U32 | B)])} ref,
-    a_fn: {({ref(Token[(ID | U32 | B)])} ref, A)} val)
-  =>
+  fun each_token_map(tokens: Tokens, a_fn: {(Tokens, A)} val) =>
     """
     Call the given function for each token, serializing as a sequence of tokens,
     using a custom function for serializing the A type as one or more B tokens.
     """
-    fn(USize(2))
+    tokens.push(USize(2))
 
-    _ctx.each_token(fn)
+    _ctx.each_token(tokens)
 
-    fn(_map.size() * 3)
+    tokens.push(_map.size() * 3)
     for ((i, n), v) in _map.pairs() do
-      fn(i)
-      fn(n)
-      a_fn(fn, v)
+      tokens.push(i)
+      tokens.push(n)
+      a_fn(tokens, v)
     end
-
-  fun to_tokens(): TokenIterator[(ID | U32 | A)] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[(ID | U32 | A)].to_tokens(this)

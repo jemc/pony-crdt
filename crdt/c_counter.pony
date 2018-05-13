@@ -119,22 +119,14 @@ class ref CCounter[A: (Integer[A] val & (Unsigned | Signed)) = U64]
   fun gt(that: CCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: CCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[CCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens(that)?
+    _kernel.from_tokens(that)?
 
-  fun each_token(fn: {ref(Token[CCounterToken[A]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    _kernel.each_token(fn)
-
-  fun to_tokens(): TokenIterator[CCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    _kernel.to_tokens()
-
-type CCounterToken[A] is (ID | U32 | A)
+    _kernel.each_token(tokens)

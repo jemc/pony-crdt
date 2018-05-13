@@ -25,7 +25,7 @@ class ref DotContext is Convergent[DotContext]
   When enough dots are accumulated into the _dot_cloud to be consecutive
   with the current threshold of _complete history, they can compacted into it.
   """
-  let _id: ID
+  var _id: ID
   embed _complete:  Map[ID, U32]
   embed _dot_cloud: HashSet[_Dot, _DotHashFn]
   var _converge_disabled: Bool = false
@@ -183,19 +183,19 @@ class ref DotContext is Convergent[DotContext]
     out.push(')')
     out
 
-  new ref from_tokens(that: TokenIterator[(ID | U32)])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
+    if that.next[USize]()? != 3 then error end
 
     _id = that.next[ID]()?
 
-    var complete_count = that.next_count()?
+    var complete_count = that.next[USize]()?
     if (complete_count % 2) != 0 then error end
     complete_count = complete_count / 2
 
-    _complete = _complete.create(complete_count)
+    // TODO: _complete.reserve(complete_count)
     while (complete_count = complete_count - 1) > 0 do
       _complete.update(
         that.next[ID]()?,
@@ -203,39 +203,33 @@ class ref DotContext is Convergent[DotContext]
       )
     end
 
-    var dot_cloud_count = that.next_count()?
+    var dot_cloud_count = that.next[USize]()?
     if (dot_cloud_count % 2) != 0 then error end
     dot_cloud_count = dot_cloud_count / 2
 
-    _dot_cloud = _dot_cloud.create(dot_cloud_count)
+    // TODO: _dot_cloud.reserve(dot_cloud_count)
     while (dot_cloud_count = dot_cloud_count - 1) > 0 do
       _dot_cloud.set(
         (that.next[ID]()?, that.next[U32]()?)
       )
     end
 
-  fun each_token(fn: {ref(Token[(ID | U32)])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    fn(USize(3))
+    tokens.push(USize(3))
 
-    fn(_id)
+    tokens.push(_id)
 
-    fn(_complete.size() * 2)
+    tokens.push(_complete.size() * 2)
     for (id', n) in _complete.pairs() do
-      fn(id')
-      fn(n)
+      tokens.push(id')
+      tokens.push(n)
     end
 
-    fn(_dot_cloud.size() * 2)
+    tokens.push(_dot_cloud.size() * 2)
     for (id', n) in _dot_cloud.values() do
-      fn(id')
-      fn(n)
+      tokens.push(id')
+      tokens.push(n)
     end
-
-  fun to_tokens(): TokenIterator[(ID | U32)] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[(ID | U32)].to_tokens(this)

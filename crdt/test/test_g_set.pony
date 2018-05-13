@@ -83,12 +83,13 @@ class TestGSetTokens is UnitTest
       .> set("banana")
       .> set("currant")
 
-    _TestTokensWellFormed[String](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[GSet[String]](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create() .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

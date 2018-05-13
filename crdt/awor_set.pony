@@ -161,22 +161,14 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
   fun ge(that: AWORHashSet[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
-  new ref from_tokens(that: TokenIterator[AWORSetToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens(that)?
+    _kernel.from_tokens(that)?
 
-  fun each_token(fn: {ref(Token[AWORSetToken[A]])} ref) =>
+  fun each_token(tokens: Tokens) =>
     """
     Call the given function for each token, serializing as a sequence of tokens.
     """
-    _kernel.each_token(fn)
-
-  fun to_tokens(): TokenIterator[AWORSetToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[AWORSetToken[A]].to_tokens(this)
-
-type AWORSetToken[A] is (ID | U32 | A)
+    _kernel.each_token(tokens)
