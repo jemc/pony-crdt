@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-type _Dot is (ID, U32)
+type _Dot is (ID, U64)
 
 primitive _DotHashFn is HashFunction[_Dot]
   // TODO: better hash combine?

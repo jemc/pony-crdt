@@ -13,7 +13,7 @@ class ref DotKernelSingle[A: Any val] is Replicated
   See the docs for the DotKernel class for more information.
   """
   let _ctx: DotContext
-  embed _map: Map[ID, (U32, A)]
+  embed _map: Map[ID, (U64, A)]
 
   new create(id': ID) =>
     """
@@ -51,7 +51,7 @@ class ref DotKernelSingle[A: Any val] is Replicated
     Return an iterator over the active values in this kernel.
     """
     object is Iterator[A]
-      let iter: Iterator[(U32, A)] = _map.values()
+      let iter: Iterator[(U64, A)] = _map.values()
       fun ref has_next(): Bool => iter.has_next()
       fun ref next(): A? => iter.next()?._2
     end
@@ -251,7 +251,7 @@ class ref DotKernelSingle[A: Any val] is Replicated
     while (count = count - 1) > 0 do
       _map.update(
         that.next[ID]()?,
-        (that.next[U32]()?, that.next[A]()?)
+        (that.next[U64]()?, that.next[A]()?)
       )
     end
 

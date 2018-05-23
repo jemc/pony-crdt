@@ -247,7 +247,7 @@ class ref DotKernel[A: Any val] is Replicated
 
     // TODO: _map.reserve(count)
     while (count = count - 1) > 0 do
-      _map.update((that.next[ID]()?, that.next[U32]()?), that.next[A]()?)
+      _map.update((that.next[ID]()?, that.next[U64]()?), that.next[A]()?)
     end
 
   fun ref from_tokens_map(
@@ -269,7 +269,7 @@ class ref DotKernel[A: Any val] is Replicated
 
     // TODO: _map.reserve(count)
     while (count = count - 1) > 0 do
-      _map.update((that.next[ID]()?, that.next[U32]()?), a_fn(that)?)
+      _map.update((that.next[ID]()?, that.next[U64]()?), a_fn(that)?)
     end
 
   fun ref each_token(tokens: Tokens) =>

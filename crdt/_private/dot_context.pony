@@ -26,7 +26,7 @@ class ref DotContext is Replicated
   with the current threshold of _complete history, they can compacted into it.
   """
   var _id: ID
-  embed _complete:  Map[ID, U32]
+  embed _complete:  Map[ID, U64]
   embed _dot_cloud: HashSet[_Dot, _DotHashFn]
   var _converge_disabled: Bool = false
 
@@ -213,7 +213,7 @@ class ref DotContext is Replicated
     while (complete_count = complete_count - 1) > 0 do
       _complete.update(
         that.next[ID]()?,
-        that.next[U32]()?
+        that.next[U64]()?
       )
     end
 
@@ -224,7 +224,7 @@ class ref DotContext is Replicated
     // TODO: _dot_cloud.reserve(dot_cloud_count)
     while (dot_cloud_count = dot_cloud_count - 1) > 0 do
       _dot_cloud.set(
-        (that.next[ID]()?, that.next[U32]()?)
+        (that.next[ID]()?, that.next[U64]()?)
       )
     end
 
