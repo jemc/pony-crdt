@@ -180,3 +180,20 @@ class ref HashCKeyspace[
     end
 
     _ctx.set_converge_disabled(converge_disabled)
+
+  fun each_token_of_history(tokens: Tokens) =>
+    """
+    Serialize the causal history, capturing each token into the given Tokens.
+    """
+    _ctx.each_token(tokens)
+
+  fun compare_history_with_tokens(that: TokensIterator): (Bool, Bool)? =>
+    """
+    Compare the causal context with that represented by the given token stream.
+    Raises an error if the tokens couldn't be parsed as a causal context.
+    Returns two boolean values, representing differences that are present.
+    The first return value is true if this context has dots missing in that one.
+    The other return value is true if that context has dots missing in this one.
+    """
+    // TODO: consider comparing without allocating and deserializing the tokens.
+    _ctx.compare(DotContext(0) .> from_tokens(that)?)

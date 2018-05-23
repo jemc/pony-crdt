@@ -6,7 +6,24 @@ class TestCKeyspace is UnitTest
   new iso create() => None
   fun name(): String => "crdt.CKeyspace"
 
-  fun apply(h: TestHelper) =>
+  fun _compare_history(
+    h: TestHelper,
+    l: CKeyspace[String, CCounter],
+    r: CKeyspace[String, CCounter],
+    result_l: Bool,
+    result_r: Bool,
+    loc: SourceLoc = __loc)?
+  =>
+    let tokens = Tokens
+    r.each_token_of_history(tokens)
+    
+    (let result_l', let result_r') =
+      l.compare_history_with_tokens(tokens.iterator())?
+    
+    h.assert_eq[Bool](result_l, result_l', "result_l", loc)
+    h.assert_eq[Bool](result_r, result_r', "result_r", loc)
+  
+  fun apply(h: TestHelper)? =>
     let a = CKeyspace[String, CCounter]("a".hash64())
     let b = CKeyspace[String, CCounter]("b".hash64())
     let c = CKeyspace[String, CCounter]("c".hash64())
@@ -20,8 +37,16 @@ class TestCKeyspace is UnitTest
 
     h.assert_true(a.converge(b))
     h.assert_true(a.converge(c))
-    h.assert_true(b.converge(c))
     h.assert_true(b.converge(a))
+
+    _compare_history(h, a, b, false, false)?
+    _compare_history(h, a, c, true, false)?
+    _compare_history(h, b, a, false, false)?
+    _compare_history(h, b, c, true, false)?
+    _compare_history(h, c, a, false, true)?
+    _compare_history(h, c, b, false, true)?
+
+    h.assert_false(b.converge(c))
     h.assert_true(c.converge(a))
     h.assert_false(c.converge(b))
 

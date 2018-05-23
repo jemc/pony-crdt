@@ -131,10 +131,10 @@ class ref DotContext is Replicated
   fun ref set_converge_disabled(value': Bool): Bool =>
     """
     Set the new value of the _converge_disabled field, returning the old value.
-    
+
     While _converge_disabled is true, the following methods will be no-ops:
     converge, from_tokens, each_token.
-    
+
     This is used in situations where the context is shared by many instances.
     """
     _converge_disabled = value'
@@ -169,6 +169,32 @@ class ref DotContext is Replicated
     _dot_cloud.union(that._dot_cloud.values())
     compact()
     changed
+
+  fun compare(that: DotContext box): (Bool, Bool) =>
+    """
+    Compare the dots in this causal context with those in the other one.
+    Returns two boolean values, representing differences that are present.
+    The first return value is true if this context has dots missing in that one.
+    The other return value is true if that context has dots missing in this one.
+    """
+    (_compare_unidir(this, that), _compare_unidir(that, this))
+
+  fun _compare_unidir(x: DotContext box, y: DotContext box): Bool =>
+    for (id', n) in x._complete.pairs() do
+      if n > y._complete.get_or_else(id', 0) then
+        return true
+      end
+    end
+
+    for dot in x._dot_cloud.values() do
+      if y._complete.get_or_else(dot._1, 0) < dot._2 then
+        if not y._dot_cloud.contains(dot) then
+          return true
+        end
+      end
+    end
+
+    false
 
   fun string(): String iso^ =>
     """
@@ -228,7 +254,7 @@ class ref DotContext is Replicated
       )
     end
 
-  fun ref each_token(tokens: Tokens) =>
+  fun each_token(tokens: Tokens) =>
     """
     Serialize the data structure, capturing each token into the given Tokens.
     """

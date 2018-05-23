@@ -5,6 +5,8 @@ actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
+    // TODO add unit tests for edge cases of DotContext, DotKernel, etc
+
     test(TestGSet)
     test(TestGSetDelta)
     test(TestGSetTokens)
