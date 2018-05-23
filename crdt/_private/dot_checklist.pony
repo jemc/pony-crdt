@@ -6,6 +6,7 @@ class DotChecklist
   The DotChecklist gives them a way to contribute to that causal history
   in a minimal way, where every write operation the CRDT results in a
   call to the `write` method of the checklist, which inserts a dot into history.
+  Note that this isn't enough to actually make them causal CRDTs, though.
   
   Once integrated thus, the DotContext in a CKeyspace for a non-causal CRDT can
   be used to detect when there are local changes to any value, just like it
