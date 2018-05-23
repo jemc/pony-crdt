@@ -40,11 +40,16 @@ class ref TReg[
   """
   var _value:     A = V()
   var _timestamp: T = T.from[U8](0)
+  let _checklist: (DotChecklist | None)
 
-  new ref create() => None
+  new ref create() =>
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context
-    None
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -103,6 +108,7 @@ class ref TReg[
     Accepts and returns a convergent delta-state.
     """
     _update_no_delta(value', timestamp')
+    _checklist_write()
 
     delta' .> _update_no_delta(value', timestamp')
 

@@ -28,17 +28,23 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   """
   var _id: ID
   embed _data: Map[ID, A]
+  let _checklist: (DotChecklist | None)
 
   new ref create(id': ID) =>
     """
     Instantiate the GCounter under the given unique replica id.
     """
-    _id   = id'
-    _data = Map[ID, A]
+    _id        = id'
+    _data      = Map[ID, A]
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context, just use the id
-    _id   = ctx.id()
-    _data = _data.create()
+  new ref _create_in(ctx: DotContext) =>
+    _id        = ctx.id()
+    _data      = _data.create()
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -75,6 +81,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     """
     try
       let v' = _data.upsert(_id, value', {(v: A, value': A): A => v + value' })?
+      _checklist_write()
       delta'._data_update(_id, v')
     end
     consume delta'

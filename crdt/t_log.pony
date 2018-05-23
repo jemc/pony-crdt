@@ -39,11 +39,16 @@ class ref TLog[
   """
   let _values: Array[(A, T)] = []
   var _cutoff: T             = T.from[U8](0)
+  let _checklist: (DotChecklist | None)
 
-  new ref create() => None
+  new ref create() =>
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context
-    None
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -164,6 +169,7 @@ class ref TLog[
     ignoring the write if its timestamp is earlier than the cutoff timestamp.
     """
     _write_no_delta(value', timestamp')
+    _checklist_write()
 
     delta'
       .> _raise_cutoff_no_delta(_cutoff)
@@ -178,6 +184,7 @@ class ref TLog[
     All entries earlier than the new cutoff timestamp will be discarded.
     """
     _raise_cutoff_no_delta(cutoff')
+    _checklist_write()
 
     delta' .> _raise_cutoff_no_delta(_cutoff)
 
@@ -196,6 +203,7 @@ class ref TLog[
 
     try
       _cutoff = _values(n' - 1)?._2
+      _checklist_write()
       var n = n' - 1
       while (n = n + 1) < size() do
         if _values(n)?._2 < _cutoff then

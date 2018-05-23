@@ -15,13 +15,17 @@ class ref GHashSet[A: Any val, H: HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: HashSet[A, H]
+  embed _data: HashSet[A, H] = _data.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _data = _data.create()
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context
-    _data = _data.create()
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -61,6 +65,7 @@ class ref GHashSet[A: Any val, H: HashFunction[A] val]
     Accepts and returns a convergent delta-state.
     """
     _data.set(value)
+    _checklist_write()
     delta._data_set(value)
     delta
 
@@ -76,6 +81,7 @@ class ref GHashSet[A: Any val, H: HashFunction[A] val]
       _data.set(value)
       delta._data_set(value)
     end
+    _checklist_write()
     delta
 
   fun ref converge(that: GHashSet[A, H] box): Bool =>

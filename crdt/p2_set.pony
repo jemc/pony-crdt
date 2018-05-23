@@ -22,16 +22,18 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _ins: HashSet[A, H]
-  embed _del: HashSet[A, H]
+  embed _ins: HashSet[A, H] = _ins.create()
+  embed _del: HashSet[A, H] = _del.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _ins = HashSet[A, H]
-    _del = HashSet[A, H]
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context
-    _ins = _ins.create()
-    _del = _del.create()
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -80,6 +82,7 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
     """
     if not _del.contains(value) then
       _ins.set(value)
+      _checklist_write()
       delta._ins_set(value)
     end
     consume delta
@@ -95,6 +98,7 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
     // TODO: Reduce memory footprint by also removing from _ins set?
     _ins.unset(value) // not strictly necessary, but reduces memory footprint
     _del.set(value)
+    _checklist_write()
     delta._del_set(value)
     consume delta
 
@@ -110,6 +114,7 @@ class ref P2HashSet[A: Any val, H: HashFunction[A] val]
     for value in that do
       delta' = set[D](value, consume delta')
     end
+    _checklist_write()
     consume delta'
 
   fun ref converge(that: P2HashSet[A, H] box): Bool =>

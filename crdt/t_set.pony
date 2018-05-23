@@ -53,13 +53,17 @@ class ref THashSet[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: HashMap[A, (T, Bool), H]
+  embed _data: HashMap[A, (T, Bool), H] = _data.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _data = HashMap[A, (T, Bool), H]
+    _checklist = None
 
-  new ref _create_in(ctx: DotContext) => // ignore the context
-    _data = _data.create()
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
 
   fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
     false
@@ -139,6 +143,7 @@ class ref THashSet[
       _unset_no_delta(value, timestamp)
       delta._unset_no_delta(value, timestamp)
     end
+    _checklist_write()
     consume delta
 
   fun ref set[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
@@ -151,6 +156,7 @@ class ref THashSet[
     Accepts and returns a convergent delta-state.
     """
     _set_no_delta(value, timestamp)
+    _checklist_write()
     delta._set_no_delta(value, timestamp)
     consume delta
 
@@ -164,6 +170,7 @@ class ref THashSet[
     Accepts and returns a convergent delta-state.
     """
     _unset_no_delta(value, timestamp)
+    _checklist_write()
     delta._unset_no_delta(value, timestamp)
     consume delta
 
@@ -179,6 +186,7 @@ class ref THashSet[
       _set_no_delta(value, timestamp)
       delta._set_no_delta(value, timestamp)
     end
+    _checklist_write()
     consume delta
 
   fun ref converge(that: THashSet[A, T, B, H] box): Bool =>
