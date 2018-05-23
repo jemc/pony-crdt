@@ -89,15 +89,10 @@ class PNCounterIncDecProperty is PNCounterProperty
             Generators.usize(0, num_replicas-1),
             Generators.u64().flat_map[_PNCounterCmd]({
               (u) =>
-                try
-                  Generators.one_of[_PNCounterCmd]([
-                     _PNCounterCmd(u, _INC)
-                     _PNCounterCmd(u, _DEC)
-                  ])?
-                else
-                  Generators.unit[_PNCounterCmd](_PNCounterCmd(u, _INC))
-                end
-
+                Generators.one_of[_PNCounterCmd]([
+                  _PNCounterCmd(u, _INC)
+                  _PNCounterCmd(u, _DEC)
+                ])
             }),
             {(replica, cmd) => _CmdOnReplica[_PNCounterCmd](replica, cmd) }
           )
