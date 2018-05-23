@@ -154,14 +154,6 @@ class TestCKeyspaceTokens is UnitTest
 
     let tokens = Tokens .> from(data)
     _TestTokensWellFormed(h, tokens)
-    for t' in tokens.array.values() do
-      match t'
-      | let t: USize => Debug("USize(" + t.string() + ")")
-      | let t: Stringable val => Debug(t.string())
-      else
-        Debug("?")
-      end
-    end
 
     try
       h.assert_eq[String](
