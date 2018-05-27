@@ -150,3 +150,36 @@ class TestGCounterTokens is UnitTest
     else
       h.fail("failed to parse token stream")
     end
+
+class TestGCounterMax is UnitTest
+  new iso create() => None
+  fun name(): String => "crdt.GCounter (max)"
+  fun apply(h: TestHelper) =>
+    let data   = GCounter[U8]("a".hash64())
+    let data'  = GCounter[U8]("b".hash64())
+    let data'' = GCounter[U8]("c".hash64())
+
+    data.increment(250)
+    data'.increment(253)
+    data''.increment(254)
+
+    h.assert_true(data.converge(data'))
+    h.assert_true(data.converge(data''))
+    h.assert_true(data'.converge(data))
+    h.assert_false(data'.converge(data'')) // data' == data''
+    h.assert_true(data''.converge(data))
+    h.assert_false(data''.converge(data')) // data'' == data'
+
+    data.increment(7)
+    data''.increment(1)
+
+    h.assert_true(data''.converge(data))
+    h.assert_false(data''.converge(data')) // data'' > data'
+
+    h.assert_eq[U8](data.value(), U8.max_value())
+    h.assert_eq[U8](data'.value(), U8.max_value())
+    h.assert_eq[U8](data''.value(), U8.max_value())
+
+    data.increment(42)
+    h.assert_eq[U8](data.value(), U8.max_value())
+

@@ -41,7 +41,6 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
     end
 
     var expected: U64 = 0
-    var overflow: Bool = false
     let deltas = Array[GCounter](commands.size())
 
     for command in commands.values() do
@@ -50,8 +49,8 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
 
       deltas.push(
         replicas(command.replica)?.increment(inc))
-      (expected, let overflowed) = expected.addc(inc)
-      overflow = overflow or overflowed
+      (let sum, let overflowed) = expected.addc(inc)
+      expected = if overflowed then U64.max_value() else sum end
 
       let observer = GCounter(U64.max_value())
       for replica in replicas.values() do
@@ -60,14 +59,9 @@ class GCounterIncProperty is Property1[(USize, Array[_CmdOnReplica[U64]])]
       if not h.assert_eq[U64](observer.value(), expected) then return end
     end
 
-    if not overflow then
-      // the current GCounter is possibly diverging on overflow
-      // so the produced value depends on the order of convergence events
-      // so we don't test this part of the property on overflow
-      let delta_observer = GCounter(U64.max_value() - 1)
-      for delta in deltas.values() do
-        delta_observer.converge(delta)
-      end
-      h.assert_eq[U64](expected, delta_observer.value())
+    let delta_observer = GCounter(U64.max_value() - 1)
+    for delta in deltas.values() do
+      delta_observer.converge(delta)
     end
+    h.assert_eq[U64](expected, delta_observer.value())
 

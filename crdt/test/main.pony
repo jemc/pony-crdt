@@ -30,6 +30,7 @@ actor Main is TestList
     test(TestGCounter)
     test(TestGCounterDelta)
     test(TestGCounterTokens)
+    test(TestGCounterMax)
 
     test(TestPNCounter)
     test(TestPNCounterDelta)
