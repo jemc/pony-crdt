@@ -48,6 +48,10 @@ actor Main is TestList
     test(TestRWORSetDelta)
     test(TestRWORSetTokens)
 
+    test(TestMVReg)
+    test(TestMVRegDelta)
+    test(TestMVRegTokens)
+
     test(TestUJSON)
     test(TestUJSONDelta)
     test(TestUJSONTokens)
