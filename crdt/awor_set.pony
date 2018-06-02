@@ -41,7 +41,7 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
 
   fun is_empty(): Bool =>
     """
-    Return true if there are no values recorded from any replica.
+    Return true if there are no values ever recorded from any replica.
     This is true at creation, after calling the clear method,
     or after a converge that results in all values being cleared.
     """
