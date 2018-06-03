@@ -101,11 +101,19 @@ class ref TLog[
     Use binary search to find the proper index for this new entry.
     Returns None if an equal entry is already present.
     """
-    if size() == 0 then return 0 end
+    // Optimize for the common case of this new entry being the latest one.
+    try
+      match _compare(this(0)?, (value', timestamp'))
+      | Equal   => return None // this entry already exists
+      | Less    => return 0    // this new entry belongs at the head
+      | Greater => None        // this new entry belongs somewhere else
+      end
+    else return 0
+    end
 
-    var min = USize(0)
+    // Do a binary search over the remainder of the range to find the index.
+    var min = USize(1)
     var max = size() - 1
-
     try
       while max >= min do
         let index = (min + max) / 2
@@ -116,7 +124,6 @@ class ref TLog[
         end
       end
     end
-
     min
 
   fun _cutoff_pos(timestamp': T): USize =>
