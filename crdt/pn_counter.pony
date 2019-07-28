@@ -80,11 +80,9 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     Increment the counter by the given value.
     Accepts and returns a convergent delta-state.
     """
-    try
-      let v' = _pos.upsert(_id, value', {(v: A, value': A): A => v + value' })?
-      _checklist_write()
-      delta'._pos_update(_id, v')
-    end
+    let v' = _pos.upsert(_id, value', {(v: A, value': A): A => v + value' })
+    _checklist_write()
+    delta'._pos_update(_id, v')
     consume delta'
 
   fun ref decrement[D: PNCounter[A] ref = PNCounter[A]](
@@ -95,11 +93,9 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     Decrement the counter by the given value.
     Accepts and returns a convergent delta-state.
     """
-    try
-      let v' = _neg.upsert(_id, value', {(v: A, value': A): A => v + value' })?
-      _checklist_write()
-      delta'._neg_update(_id, v')
-    end
+    let v' = _neg.upsert(_id, value', {(v: A, value': A): A => v + value' })
+    _checklist_write()
+    delta'._neg_update(_id, v')
     consume delta'
 
   fun ref converge(that: PNCounter[A] box): Bool =>

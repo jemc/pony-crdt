@@ -113,7 +113,7 @@ class ref DotContext is Replicated
     Pony idioms of having the type system prevent you from doing unsafe actions.
     """
     // TODO: consider the refactor mentioned in the docstring.
-    let n = try _complete.upsert(_id, 1, {(n', _) => n' + 1 })? else 1 end
+    let n = _complete.upsert(_id, 1, {(n', _) => n' + 1 })
     (_id, n)
 
   fun ref set(dot: _Dot, compact_now: Bool = true) =>

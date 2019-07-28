@@ -85,11 +85,9 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     Increment the counter by the given value.
     Accepts and returns a convergent delta-state.
     """
-    try
-      let v' = _data.upsert(_id, value', {(x, y) => _Math.saturated_sum[A](x, y) })?
-      _checklist_write()
-      delta'._data_update(_id, v')
-    end
+    let v' = _data.upsert(_id, value', {(x, y) => _Math.saturated_sum[A](x, y) })
+    _checklist_write()
+    delta'._data_update(_id, v')
     consume delta'
 
   fun ref converge(that: GCounter[A] box): Bool =>
