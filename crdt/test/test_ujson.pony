@@ -71,7 +71,7 @@ class TestUJSON is UnitTest
     expected = """{"colors":{"red":"#ff0000","blue":"#0000ff"}}"""
     h.assert_eq[String](p.get().string(), expected)
 
-    q.clear(["colors"])
+    q.clear_at(["colors"])
     q.update(["colors"; "green"], "#00ff00")
 
     expected = """{"colors":{"green":"#00ff00"}}"""
@@ -212,7 +212,7 @@ class TestUJSONDelta is UnitTest
     expected = """{"colors":{"red":"#ff0000","blue":"#0000ff"}}"""
     h.assert_eq[String](p.get().string(), expected)
 
-    var q_delta = q.clear(["colors"])
+    var q_delta = q.clear_at(["colors"])
     q_delta = q.update(["colors"; "green"], "#00ff00", q_delta)
 
     expected = """{"colors":{"green":"#00ff00"}}"""
@@ -307,12 +307,13 @@ class TestUJSONTokens is UnitTest
     data.converge(data')
     data.converge(data'')
 
-    _TestTokensWellFormed[(ID | U32 | UJSONValue)](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[UJSON](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create(0) .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

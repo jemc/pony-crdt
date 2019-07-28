@@ -5,6 +5,8 @@ actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
+    // TODO add unit tests for edge cases of DotContext, DotKernel, etc
+
     test(TestGSet)
     test(TestGSetDelta)
     test(TestGSetTokens)
@@ -28,6 +30,7 @@ actor Main is TestList
     test(TestGCounter)
     test(TestGCounterDelta)
     test(TestGCounterTokens)
+    test(TestGCounterMax)
 
     test(TestPNCounter)
     test(TestPNCounterDelta)
@@ -45,10 +48,18 @@ actor Main is TestList
     test(TestRWORSetDelta)
     test(TestRWORSetTokens)
 
+    test(TestMVReg)
+    test(TestMVRegDelta)
+    test(TestMVRegTokens)
+
     test(TestUJSON)
     test(TestUJSONDelta)
     test(TestUJSONTokens)
     test(TestUJSONNode)
+
+    test(TestCKeyspace)
+    test(TestCKeyspaceDelta)
+    test(TestCKeyspaceTokens)
 
     test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncProperty))
     test(Property1UnitTest[(USize, Array[_CmdOnReplica])](CCounterIncDecProperty))

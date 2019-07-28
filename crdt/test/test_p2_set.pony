@@ -140,12 +140,13 @@ class TestP2SetTokens is UnitTest
       .> unset("dewberry")
       .> unset("apple")
 
-    _TestTokensWellFormed[String](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[P2Set[String]](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create() .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

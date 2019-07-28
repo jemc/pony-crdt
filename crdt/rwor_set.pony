@@ -8,7 +8,7 @@ type RWORSetIs[A: (Hashable val & Equatable[A])]
   is RWORHashSet[A, HashIs[A]]
 
 class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
-  is (Comparable[RWORHashSet[A, H]] & Convergent[RWORHashSet[A, H]])
+  is (Comparable[RWORHashSet[A, H]] & Causal[RWORHashSet[A, H]])
   """
   An unordered mutable set that supports removing locally visible elements
   ("observed remove") using per-replica sequence numbers to track causality.
@@ -31,7 +31,21 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     """
     Instantiate under the given unique replica id.
     """
-    _kernel = DotKernel[(A, Bool)](id)
+    _kernel = _kernel.create(id)
+
+  new ref _create_in(ctx': DotContext) =>
+    _kernel = _kernel.create_in(ctx')
+
+  fun _context(): this->DotContext =>
+    _kernel.context()
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values ever recorded from any replica.
+    This is true both at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _kernel.is_empty()
 
   fun result(): HashSet[A, H] =>
     """
@@ -137,6 +151,13 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     """
     _kernel.converge(that._kernel)
 
+  fun ref _converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    _kernel.converge_empty_in(ctx')
+
   fun string(): String iso^ =>
     """
     Return a best effort at printing the set. If A is a Stringable, use the
@@ -166,29 +187,14 @@ class ref RWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
   fun ge(that: RWORHashSet[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
-  new ref from_tokens(that: TokenIterator[RWORSetToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens_map[(A | Bool)](that, {(that)? =>
-      if that.next_count()? != 2 then error end
-      (that.next[A]()?, that.next[Bool]()?)
-    })?
+    _kernel.from_tokens(that)?
 
-  fun each_token(fn: {ref(Token[RWORSetToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    _kernel.each_token_map[(A | Bool)](fn, {(fn, a) =>
-      fn(USize(2))
-      fn(a._1)
-      fn(a._2)
-    })
-
-  fun to_tokens(): TokenIterator[RWORSetToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[RWORSetToken[A]].to_tokens(this)
-
-type RWORSetToken[A] is (ID | U32 | A | Bool)
+    _kernel.each_token(tokens)

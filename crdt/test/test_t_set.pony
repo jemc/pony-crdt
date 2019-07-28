@@ -156,12 +156,13 @@ class TestTSetTokens is UnitTest
       .> unset("dewberry", 6)
       .> unset("apple",    6)
 
-    _TestTokensWellFormed[(String | U64 | Bool)](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[TSet[String]](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create() .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

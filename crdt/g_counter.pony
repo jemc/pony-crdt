@@ -1,9 +1,16 @@
+use "_private"
 use "collections"
 
 class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
-  is (Comparable[GCounter[A]] & Convergent[GCounter[A]])
+  is (Comparable[GCounter[A]] & Convergent[GCounter[A]] & Replicated)
   """
   A mutable grow-only counter. That is, the value can only be increased.
+
+  It is limited by the maximum value of the used unsigned integer datatype.
+  Any operation that would lead to an overflow (if the maximum is the
+  maximum value for the used unsigned integer type) will result in the value
+  being set to the maximum. So once the maximum is reached, the GCounter will
+  never change.
 
   This data type tracks the state seen from each replica, thus the size of the
   state will grow proportionally with the number of total replicas. New replicas
@@ -25,15 +32,34 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: ID
+  var _id: ID
   embed _data: Map[ID, A]
+  let _checklist: (DotChecklist | None)
 
   new ref create(id': ID) =>
     """
     Instantiate the GCounter under the given unique replica id.
     """
-    _id   = id'
-    _data = Map[ID, A]
+    _id        = id'
+    _data      = Map[ID, A]
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _id        = ctx.id()
+    _data      = _data.create()
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun apply(): A =>
     """
@@ -46,7 +72,7 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     Return the current value of the counter (the sum of all replica values).
     """
     var sum = A(0)
-    for v in _data.values() do sum = sum + v end
+    for v in _data.values() do sum = _Math.saturated_sum[A](sum, v) end
     sum
 
   fun ref _data_update(id': ID, value': A) => _data(id') = value'
@@ -60,7 +86,8 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     Accepts and returns a convergent delta-state.
     """
     try
-      let v' = _data.upsert(_id, value', {(v: A, value': A): A => v + value' })?
+      let v' = _data.upsert(_id, value', {(x, y) => _Math.saturated_sum[A](x, y) })?
+      _checklist_write()
       delta'._data_update(_id, v')
     end
     consume delta'
@@ -99,11 +126,11 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: GCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: GCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[GCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if count < 1 then error end
     count = count - 1
@@ -112,26 +139,18 @@ class ref GCounter[A: (Integer[A] val & Unsigned) = U64]
     if (count % 2) != 0 then error end
     count = count / 2
 
-    _data = _data.create(count)
+    // TODO: _data.reserve(count)
     while (count = count - 1) > 0 do
       _data.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[GCounterToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(1 + (_data.size() * 2))
-    fn(_id)
+    tokens.push(1 + (_data.size() * 2))
+    tokens.push(_id)
     for (id, v) in _data.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
-
-  fun to_tokens(): TokenIterator[GCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[GCounterToken[A]].to_tokens(this)
-
-type GCounterToken[A] is (ID | A)

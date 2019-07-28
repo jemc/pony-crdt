@@ -118,12 +118,13 @@ class TestTRegTokens is UnitTest
   fun apply(h: TestHelper) =>
     let data = TRegString .> update("apple", 5)
 
-    _TestTokensWellFormed[(String | U64)](h, data.to_tokens())
+    let tokens = Tokens .> from(data)
+    _TestTokensWellFormed(h, tokens)
 
     try
       h.assert_eq[TRegString](
         data,
-        data.from_tokens(data.to_tokens())?
+        data.create() .> from_tokens(tokens.iterator())?
       )
     else
       h.fail("failed to parse token stream")

@@ -2,7 +2,7 @@
   "deps": [
     { "type": "github", "repo": "jemc/pony-jason" },
     {
-      "tag": "master",
+      "tag": "0.4.0",
       "type": "github",
       "repo": "mfelsche/ponycheck"
     }

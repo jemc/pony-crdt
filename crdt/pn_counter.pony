@@ -1,7 +1,8 @@
+use "_private"
 use "collections"
 
 class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
-  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]])
+  is (Comparable[PNCounter[A]] & Convergent[PNCounter[A]] & Replicated)
   """
   A mutable counter, which can be both increased and decreased.
 
@@ -21,17 +22,37 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _id: ID
+  var _id: ID
   embed _pos: Map[ID, A]
   embed _neg: Map[ID, A]
+  let _checklist: (DotChecklist | None)
 
   new ref create(id': ID) =>
     """
     Instantiate the PNCounter under the given unique replica id.
     """
-    _id  = id'
-    _pos = Map[ID, A]
-    _neg = Map[ID, A]
+    _id        = id'
+    _pos       = _pos.create()
+    _neg       = _neg.create()
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _id        = ctx.id()
+    _pos       = _pos.create()
+    _neg       = _neg.create()
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    (_pos.size() == 0) and (_neg.size() == 0)
 
   fun apply(): A =>
     """
@@ -61,6 +82,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     """
     try
       let v' = _pos.upsert(_id, value', {(v: A, value': A): A => v + value' })?
+      _checklist_write()
       delta'._pos_update(_id, v')
     end
     consume delta'
@@ -75,6 +97,7 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
     """
     try
       let v' = _neg.upsert(_id, value', {(v: A, value': A): A => v + value' })?
+      _checklist_write()
       delta'._neg_update(_id, v')
     end
     consume delta'
@@ -120,56 +143,48 @@ class ref PNCounter[A: (Integer[A] val & Unsigned) = U64]
   fun gt(that: PNCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: PNCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[PNCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
+    if that.next[USize]()? != 3 then error end
 
     _id = that.next[ID]()?
 
-    var pos_count = that.next_count()?
+    var pos_count = that.next[USize]()?
     if (pos_count % 2) != 0 then error end
     pos_count = pos_count / 2
 
-    _pos = _pos.create(pos_count)
+    // TODO: _pos.reserve(pos_count)
     while (pos_count = pos_count - 1) > 0 do
       _pos.update(that.next[ID]()?, that.next[A]()?)
     end
 
-    var neg_count = that.next_count()?
+    var neg_count = that.next[USize]()?
     if (neg_count % 2) != 0 then error end
     neg_count = neg_count / 2
 
-    _neg = _neg.create(neg_count)
+    // TODO: _neg.reserve(neg_count)
     while (neg_count = neg_count - 1) > 0 do
       _neg.update(that.next[ID]()?, that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[PNCounterToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(USize(3))
+    tokens.push(USize(3))
 
-    fn(_id)
+    tokens.push(_id)
 
-    fn(_pos.size() * 2)
+    tokens.push(_pos.size() * 2)
     for (id, v) in _pos.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
 
-    fn(_neg.size() * 2)
+    tokens.push(_neg.size() * 2)
     for (id, v) in _neg.pairs() do
-      fn(id)
-      fn(v)
+      tokens.push(id)
+      tokens.push(v)
     end
-
-  fun to_tokens(): TokenIterator[PNCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[PNCounterToken[A]].to_tokens(this)
-
-type PNCounterToken[A] is (ID | A)

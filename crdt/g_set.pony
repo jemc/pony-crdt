@@ -1,11 +1,12 @@
+use "_private"
 use "collections"
 
 type GSet[A: (Hashable val & Equatable[A])] is GHashSet[A, HashEq[A]]
 
-type GSetIs[A: Any #share] is GHashSet[A, HashIs[A]]
+type GSetIs[A: Any val] is GHashSet[A, HashIs[A]]
 
-class ref GHashSet[A: Any #share, H: HashFunction[A] val]
-  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]])
+class ref GHashSet[A: Any val, H: HashFunction[A] val]
+  is (Comparable[GHashSet[A, H]] & Convergent[GHashSet[A, H]] & Replicated)
   """
   An unordered mutable grow-only set. That is, it only allows insertion.
 
@@ -14,10 +15,26 @@ class ref GHashSet[A: Any #share, H: HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: HashSet[A, H]
+  embed _data: HashSet[A, H] = _data.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _data = HashSet[A, H]
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun ref _data_set(value: A) => _data.set(value)
 
@@ -48,6 +65,7 @@ class ref GHashSet[A: Any #share, H: HashFunction[A] val]
     Accepts and returns a convergent delta-state.
     """
     _data.set(value)
+    _checklist_write()
     delta._data_set(value)
     delta
 
@@ -63,6 +81,7 @@ class ref GHashSet[A: Any #share, H: HashFunction[A] val]
       _data.set(value)
       delta._data_set(value)
     end
+    _checklist_write()
     delta
 
   fun ref converge(that: GHashSet[A, H] box): Bool =>
@@ -103,27 +122,19 @@ class ref GHashSet[A: Any #share, H: HashFunction[A] val]
   fun ge(that: GHashSet[A, H] box): Bool => _data.ge(that._data)
   fun values(): Iterator[A]^ => _data.values()
 
-  new ref from_tokens(that: TokenIterator[GSetToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
-    _data = _data.create(count)
+    var count = that.next[USize]()?
+    // TODO: _data.reserve(count)
     while (count = count - 1) > 0 do
       _data.set(that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[GSetToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(_data.size())
-    for value in _data.values() do fn(value) end
-
-  fun to_tokens(): TokenIterator[GSetToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[GSetToken[A]].to_tokens(this)
-
-type GSetToken[A] is A
+    tokens.push(_data.size())
+    for value in _data.values() do tokens.push(value) end

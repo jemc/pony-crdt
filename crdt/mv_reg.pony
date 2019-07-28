@@ -1,14 +1,14 @@
 use "_private"
 use "collections"
 
-type AWORSet[A: (Hashable val & Equatable[A])]
-  is AWORHashSet[A, HashEq[A]]
+type MVReg[A: (Hashable val & Equatable[A])]
+  is MVHashReg[A, HashEq[A]]
 
-type AWORSetIs[A: (Hashable val & Equatable[A])]
-  is AWORHashSet[A, HashIs[A]]
+type MVRegIs[A: (Hashable val & Equatable[A])]
+  is MVHashReg[A, HashIs[A]]
 
-class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
-  is (Comparable[AWORHashSet[A, H]] & Causal[AWORHashSet[A, H]])
+class ref MVHashReg[A: Equatable[A] val, H: HashFunction[A] val]
+  is (Comparable[MVHashReg[A, H]] & Causal[MVHashReg[A, H]])
   """
   An unordered mutable set that supports removing locally visible elements
   ("observed remove") using per-replica sequence numbers to track causality.
@@ -72,33 +72,22 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     end
     false
 
-  fun ref set[D: AWORHashSet[A, H] ref = AWORHashSet[A, H]](
+  fun ref update[D: MVHashReg[A, H] ref = MVHashReg[A, H]](
     value': A,
-    delta': D = recover AWORHashSet[A, H](0) end)
+    delta': D = recover MVHashReg[A, H](0) end)
   : D^ =>
     """
-    Add a value to the set.
+    Set the value of the register, overriding all currently visible values.
+    After this function, the register will have a single value locally, at least
+    until any concurrent updates are converged, adding more values into the set.
     Accepts and returns a convergent delta-state.
     """
-    // As a memory optimization, first remove value' in any/all replicas.
-    // The value only needs a dot in one replica - this one we're in now.
-    _kernel.remove_value[Eq[A]](value', delta'._kernel)
+    _kernel.remove_all(delta'._kernel)
     _kernel.set(value', delta'._kernel)
     delta'
 
-  fun ref unset[D: AWORHashSet[A, H] ref = AWORHashSet[A, H]](
-    value': A,
-    delta': D = recover AWORHashSet[A, H](0) end)
-  : D^ =>
-    """
-    Remove a value from the set.
-    Accepts and returns a convergent delta-state.
-    """
-    _kernel.remove_value[Eq[A]](value', delta'._kernel)
-    delta'
-
-  fun ref clear[D: AWORHashSet[A, H] ref = AWORHashSet[A, H]](
-    delta': D = recover AWORHashSet[A, H](0) end)
+  fun ref clear[D: MVHashReg[A, H] ref = MVHashReg[A, H]](
+    delta': D = recover MVHashReg[A, H](0) end)
   : D^ =>
     """
     Remove all locally visible elements from the set.
@@ -107,20 +96,9 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     _kernel.remove_all(delta'._kernel)
     delta'
 
-  fun ref union[D: AWORHashSet[A, H] ref = AWORHashSet[A, H]](
-    that': Iterator[A],
-    delta': D = recover AWORHashSet[A, H](0) end)
-  : D^ =>
+  fun ref converge(that: MVHashReg[A, H] box): Bool =>
     """
-    Add everything in the given iterator to the set.
-    Accepts and returns a convergent delta-state.
-    """
-    for value' in that' do set(value', delta') end
-    delta'
-
-  fun ref converge(that: AWORHashSet[A, H] box): Bool =>
-    """
-    Converge from the given AWORSet into this one.
+    Converge from the given MVReg into this one.
     Returns true if the convergence added new information to the data structure.
     """
     _kernel.converge(that._kernel)
@@ -153,12 +131,12 @@ class ref AWORHashSet[A: Equatable[A] val, H: HashFunction[A] val]
     consume buf
 
   // TODO: optimize comparison functions:
-  fun eq(that: AWORHashSet[A, H] box): Bool => result().eq(that.result())
-  fun ne(that: AWORHashSet[A, H] box): Bool => result().ne(that.result())
-  fun lt(that: AWORHashSet[A, H] box): Bool => result().lt(that.result())
-  fun le(that: AWORHashSet[A, H] box): Bool => result().le(that.result())
-  fun gt(that: AWORHashSet[A, H] box): Bool => result().gt(that.result())
-  fun ge(that: AWORHashSet[A, H] box): Bool => result().ge(that.result())
+  fun eq(that: MVHashReg[A, H] box): Bool => result().eq(that.result())
+  fun ne(that: MVHashReg[A, H] box): Bool => result().ne(that.result())
+  fun lt(that: MVHashReg[A, H] box): Bool => result().lt(that.result())
+  fun le(that: MVHashReg[A, H] box): Bool => result().le(that.result())
+  fun gt(that: MVHashReg[A, H] box): Bool => result().gt(that.result())
+  fun ge(that: MVHashReg[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
   fun ref from_tokens(that: TokensIterator)? =>

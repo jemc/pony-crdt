@@ -1,11 +1,12 @@
+use "_private"
 use "collections"
 
 type P2Set[A: (Hashable val & Equatable[A])] is P2HashSet[A, HashEq[A]]
 
-type P2SetIs[A: Any #share] is P2HashSet[A, HashIs[A]]
+type P2SetIs[A: Any val] is P2HashSet[A, HashIs[A]]
 
-class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
-  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]])
+class ref P2HashSet[A: Any val, H: HashFunction[A] val]
+  is (Comparable[P2HashSet[A, H]] & Convergent[P2HashSet[A, H]] & Replicated)
   """
   An unordered mutable two-phase set that supports one-time removal.
   That is, once an element has been deleted it may never be inserted again.
@@ -21,12 +22,27 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _ins: HashSet[A, H]
-  embed _del: HashSet[A, H]
+  embed _ins: HashSet[A, H] = _ins.create()
+  embed _del: HashSet[A, H] = _del.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _ins = HashSet[A, H]
-    _del = HashSet[A, H]
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    (_ins.size() == 0) and (_del.size() == 0)
 
   fun ref _ins_set(value: A) => _ins.set(value)
   fun ref _del_set(value: A) => _del.set(value)
@@ -66,6 +82,7 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
     """
     if not _del.contains(value) then
       _ins.set(value)
+      _checklist_write()
       delta._ins_set(value)
     end
     consume delta
@@ -81,6 +98,7 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
     // TODO: Reduce memory footprint by also removing from _ins set?
     _ins.unset(value) // not strictly necessary, but reduces memory footprint
     _del.set(value)
+    _checklist_write()
     delta._del_set(value)
     consume delta
 
@@ -96,6 +114,7 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
     for value in that do
       delta' = set[D](value, consume delta')
     end
+    _checklist_write()
     consume delta'
 
   fun ref converge(that: P2HashSet[A, H] box): Bool =>
@@ -147,40 +166,32 @@ class ref P2HashSet[A: Any #share, H: HashFunction[A] val]
   fun ge(that: P2HashSet[A, H] box): Bool => result().ge(that.result())
   fun values(): Iterator[A]^ => result().values()
 
-  new ref from_tokens(that: TokenIterator[P2SetToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 2 then error end
+    if that.next[USize]()? != 2 then error end
 
-    var ins_count = that.next_count()?
-    _ins = _ins.create(ins_count)
+    var ins_count = that.next[USize]()?
+    // TODO: _ins.reserve(ins_count)
     while (ins_count = ins_count - 1) > 0 do
       _ins.set(that.next[A]()?)
     end
 
-    var del_count = that.next_count()?
-    _del = _del.create(del_count)
+    var del_count = that.next[USize]()?
+    // TODO: _del.reserve(del_count)
     while (del_count = del_count - 1) > 0 do
       _del.set(that.next[A]()?)
     end
 
-  fun each_token(fn: {ref(Token[P2SetToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(USize(2))
+    tokens.push(USize(2))
 
-    fn(_ins.size())
-    for value in _ins.values() do fn(value) end
+    tokens.push(_ins.size())
+    for value in _ins.values() do tokens.push(value) end
 
-    fn(_del.size())
-    for value in _del.values() do fn(value) end
-
-  fun to_tokens(): TokenIterator[P2SetToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[P2SetToken[A]].to_tokens(this)
-
-type P2SetToken[A] is A
+    tokens.push(_del.size())
+    for value in _del.values() do tokens.push(value) end

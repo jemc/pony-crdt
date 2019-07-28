@@ -1,13 +1,14 @@
 use "ponytest"
 use ".."
 
-primitive _TestTokensWellFormed[A: Any val]
-  fun apply(h: TestHelper, tokens: TokenIterator[A], loc: SourceLoc = __loc) =>
+primitive _TestTokensWellFormed
+  fun apply(h: TestHelper, tokens: Tokens, loc: SourceLoc = __loc) =>
     var expected: USize = 1
     var actual:   USize = 0
+    let iter = tokens.array.values()
     try
       while true do
-        match tokens.next[Token[A]]()?
+        match iter.next()?
         | let size: USize => expected = expected + size
         end
         actual = actual + 1

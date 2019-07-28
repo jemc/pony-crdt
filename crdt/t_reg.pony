@@ -1,3 +1,5 @@
+use "_private"
+
 type TRegString[
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
@@ -14,7 +16,7 @@ class ref TReg[
   V: _DefaultValueFn[A] val,
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[TReg[A, V, T, B]] & Convergent[TReg[A, V, T, B]])
+  is (Equatable[TReg[A, V, T, B]] & Convergent[TReg[A, V, T, B]] & Replicated)
   """
   A mutable register with last-write-wins semantics for updating the value.
   That is, every update operation includes a logical timestamp (U64 by default,
@@ -38,8 +40,25 @@ class ref TReg[
   """
   var _value:     A = V()
   var _timestamp: T = T.from[U8](0)
+  let _checklist: (DotChecklist | None)
 
-  new ref create() => None
+  new ref create() =>
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _timestamp == T.from[U8](0)
 
   fun apply(): A =>
     """
@@ -89,6 +108,7 @@ class ref TReg[
     Accepts and returns a convergent delta-state.
     """
     _update_no_delta(value', timestamp')
+    _checklist_write()
 
     delta' .> _update_no_delta(value', timestamp')
 
@@ -129,26 +149,18 @@ class ref TReg[
   fun gt(that: TReg[A, V, T, B] box): Bool => value().gt(that.value())
   fun ge(that: TReg[A, V, T, B] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[TRegToken[A, T]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 2 then error end
+    if that.next[USize]()? != 2 then error end
     _value     = that.next[A]()?
     _timestamp = that.next[T]()?
 
-  fun each_token(fn: {ref(Token[TRegToken[A, T]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(USize(2))
-    fn(_value)
-    fn(_timestamp)
-
-  fun to_tokens(): TokenIterator[TRegToken[A, T]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[TRegToken[A, T]].to_tokens(this)
-
-type TRegToken[A, T] is (A | T)
+    tokens.push(USize(2))
+    tokens.push(_value)
+    tokens.push(_timestamp)

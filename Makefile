@@ -19,7 +19,7 @@ clean:
 	rm -rf bin
 
 lldb:
-	lldb -o run -- $(shell which stable) env $(PONYC) --debug -o /tmp ${PKG}/test
+	stable env lldb -o run -- $(PONYC) --debug -o /tmp ${PKG}/test
 
 lldb-test: bin/test
 	lldb -o run -- bin/test

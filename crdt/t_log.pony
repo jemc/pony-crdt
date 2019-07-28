@@ -1,8 +1,10 @@
+use "_private"
+
 class ref TLog[
   A: Comparable[A] val,
   T: (Integer[T] & Unsigned) = U64,
   B: (BiasGreater | BiasLesser) = BiasGreater]
-  is (Equatable[TLog[A, T, B]] & Convergent[TLog[A, T, B]])
+  is (Equatable[TLog[A, T, B]] & Convergent[TLog[A, T, B]] & Replicated)
   """
   A sorted list of ordered log entries, each with a value and logical timestamp.
   (U64 by default, though it may be any unsigned integer type). The list of
@@ -35,12 +37,27 @@ class ref TLog[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  let _values: Array[(A, T)]
-  var _cutoff: T
+  let _values: Array[(A, T)] = []
+  var _cutoff: T             = T.from[U8](0)
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _values = []
-    _cutoff = T.from[U8](0)
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    (_values.size() == 0) and (_cutoff == T.from[U8](0))
 
   fun apply(index: USize): (A, T)? =>
     """
@@ -84,11 +101,19 @@ class ref TLog[
     Use binary search to find the proper index for this new entry.
     Returns None if an equal entry is already present.
     """
-    if size() == 0 then return 0 end
+    // Optimize for the common case of this new entry being the latest one.
+    try
+      match _compare(this(0)?, (value', timestamp'))
+      | Equal   => return None // this entry already exists
+      | Less    => return 0    // this new entry belongs at the head
+      | Greater => None        // this new entry belongs somewhere else
+      end
+    else return 0
+    end
 
-    var min = USize(0)
+    // Do a binary search over the remainder of the range to find the index.
+    var min = USize(1)
     var max = size() - 1
-
     try
       while max >= min do
         let index = (min + max) / 2
@@ -99,7 +124,6 @@ class ref TLog[
         end
       end
     end
-
     min
 
   fun _cutoff_pos(timestamp': T): USize =>
@@ -152,6 +176,7 @@ class ref TLog[
     ignoring the write if its timestamp is earlier than the cutoff timestamp.
     """
     _write_no_delta(value', timestamp')
+    _checklist_write()
 
     delta'
       .> _raise_cutoff_no_delta(_cutoff)
@@ -166,6 +191,7 @@ class ref TLog[
     All entries earlier than the new cutoff timestamp will be discarded.
     """
     _raise_cutoff_no_delta(cutoff')
+    _checklist_write()
 
     delta' .> _raise_cutoff_no_delta(_cutoff)
 
@@ -184,6 +210,7 @@ class ref TLog[
 
     try
       _cutoff = _values(n' - 1)?._2
+      _checklist_write()
       var n = n' - 1
       while (n = n + 1) < size() do
         if _values(n)?._2 < _cutoff then
@@ -294,11 +321,11 @@ class ref TLog[
       false
     end
 
-  new ref from_tokens(that: TokenIterator[TLogToken[A, T]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if count < 1 then error end
     count = count - 1
@@ -307,26 +334,18 @@ class ref TLog[
     if (count % 2) != 0 then error end
     count = count / 2
 
-    _values = _values.create(count)
+    // TODO: _values.reserve(count)
     while (count = count - 1) > 0 do
       _values.push((that.next[A]()?, that.next[T]()?))
     end
 
-  fun each_token(fn: {ref(Token[TLogToken[A, T]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(1 + (_values.size() * 2))
-    fn(_cutoff)
+    tokens.push(1 + (_values.size() * 2))
+    tokens.push(_cutoff)
     for (v, t) in _values.values() do
-      fn(v)
-      fn(t)
+      tokens.push(v)
+      tokens.push(t)
     end
-
-  fun to_tokens(): TokenIterator[TLogToken[A, T]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[TLogToken[A, T]].to_tokens(this)
-
-type TLogToken[A, T] is (A | T)

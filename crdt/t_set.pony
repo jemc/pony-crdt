@@ -1,3 +1,4 @@
+use "_private"
 use "collections"
 
 type TSet[
@@ -13,13 +14,14 @@ type TSetIs[
   is THashSet[A, T, B, HashIs[A]]
 
 class ref THashSet[
-  A: Any #share,
+  A: Any val,
   T: Comparable[T] val,
   B: (BiasInsert | BiasDelete),
   H: HashFunction[A] val]
   is
   ( Comparable[THashSet[A, T, B, H]]
-  & Convergent[THashSet[A, T, B, H]] )
+  & Convergent[THashSet[A, T, B, H]]
+  & Replicated)
   """
   A mutable set with last-write-wins semantics for insertion and deletion.
   That is, every insertion and deletion operation includes a logical timestamp
@@ -51,10 +53,26 @@ class ref THashSet[
 
   All mutator methods accept and return a convergent delta-state.
   """
-  embed _data: HashMap[A, (T, Bool), H]
+  embed _data: HashMap[A, (T, Bool), H] = _data.create()
+  let _checklist: (DotChecklist | None)
 
   new ref create() =>
-    _data = HashMap[A, (T, Bool), H]
+    _checklist = None
+
+  new ref _create_in(ctx: DotContext) =>
+    _checklist = DotChecklist(ctx)
+
+  fun ref _checklist_write() =>
+    match _checklist | let c: DotChecklist => c.write() end
+
+  fun ref _converge_empty_in(ctx: DotContext box): Bool => // ignore the context
+    false
+
+  fun is_empty(): Bool =>
+    """
+    Return true if the data structure contains no information (bottom state).
+    """
+    _data.size() == 0
 
   fun size(): USize =>
     """
@@ -125,6 +143,7 @@ class ref THashSet[
       _unset_no_delta(value, timestamp)
       delta._unset_no_delta(value, timestamp)
     end
+    _checklist_write()
     consume delta
 
   fun ref set[D: THashSet[A, T, B, H] ref = THashSet[A, T, B, H]](
@@ -137,6 +156,7 @@ class ref THashSet[
     Accepts and returns a convergent delta-state.
     """
     _set_no_delta(value, timestamp)
+    _checklist_write()
     delta._set_no_delta(value, timestamp)
     consume delta
 
@@ -150,6 +170,7 @@ class ref THashSet[
     Accepts and returns a convergent delta-state.
     """
     _unset_no_delta(value, timestamp)
+    _checklist_write()
     delta._unset_no_delta(value, timestamp)
     consume delta
 
@@ -165,6 +186,7 @@ class ref THashSet[
       _set_no_delta(value, timestamp)
       delta._set_no_delta(value, timestamp)
     end
+    _checklist_write()
     consume delta
 
   fun ref converge(that: THashSet[A, T, B, H] box): Bool =>
@@ -246,35 +268,27 @@ class ref THashSet[
   fun timestamps(): Iterator[T]^ => map().values()
   fun pairs(): Iterator[(A, T)]^ => map().pairs()
 
-  new ref from_tokens(that: TokenIterator[TSetToken[A, T]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    var count = that.next_count()?
+    var count = that.next[USize]()?
 
     if (count % 3) != 0 then error end
     count = count / 3
 
-    _data = _data.create(count)
+    // TODO: _data.reserve(count)
     while (count = count - 1) > 0 do
       _data.update(that.next[A]()?, (that.next[T]()?, that.next[Bool]()?))
     end
 
-  fun each_token(fn: {ref(Token[TSetToken[A, T]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(_data.size() * 3)
+    tokens.push(_data.size() * 3)
     for (k, (t, b)) in _data.pairs() do
-      fn(k)
-      fn(t)
-      fn(b)
+      tokens.push(k)
+      tokens.push(t)
+      tokens.push(b)
     end
-
-  fun to_tokens(): TokenIterator[TSetToken[A, T]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[TSetToken[A, T]].to_tokens(this)
-
-type TSetToken[A, T] is (A | T | Bool)

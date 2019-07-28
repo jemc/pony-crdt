@@ -2,7 +2,7 @@ use "_private"
 use "collections"
 
 class ref CCounter[A: (Integer[A] val & (Unsigned | Signed)) = U64]
-  is (Comparable[CCounter[A]] & Convergent[CCounter[A]])
+  is (Comparable[CCounter[A]] & Causal[CCounter[A]])
   """
   A mutable counter, which can be both increased and decreased.
 
@@ -28,9 +28,23 @@ class ref CCounter[A: (Integer[A] val & (Unsigned | Signed)) = U64]
 
   new ref create(id: ID) =>
     """
-    Instantiate the CCounter under the given unique replica id.
+    Instantiate under the given unique replica id.
     """
-    _kernel = DotKernelSingle[A](id)
+    _kernel = _kernel.create(id)
+
+  new ref _create_in(ctx': DotContext) =>
+    _kernel = _kernel.create_in(ctx')
+
+  fun _context(): this->DotContext =>
+    _kernel.context()
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values ever recorded from any replica.
+    This is true at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _kernel.is_empty()
 
   fun apply(): A =>
     """
@@ -68,12 +82,29 @@ class ref CCounter[A: (Integer[A] val & (Unsigned | Signed)) = U64]
     _kernel.upsert(-value', {(v, value') => v + value' }, delta'._kernel)
     delta'
 
+  fun ref clear[D: CCounter[A] ref = CCounter[A]](
+    delta': D = recover CCounter[A](0) end)
+  : D^ =>
+    """
+    Remove all locally visible changes to the counter, resetting it to zero.
+    Accepts and returns a convergent delta-state.
+    """
+    _kernel.remove_all(delta'._kernel)
+    delta'
+
   fun ref converge(that: CCounter[A] box): Bool =>
     """
     Converge from the given CCounter into this one.
     Returns true if the convergence added new information to the data structure.
     """
     _kernel.converge(that._kernel)
+
+  fun ref _converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    _kernel.converge_empty_in(ctx')
 
   fun string(): String iso^ =>
     """
@@ -88,22 +119,14 @@ class ref CCounter[A: (Integer[A] val & (Unsigned | Signed)) = U64]
   fun gt(that: CCounter[A] box): Bool => value().gt(that.value())
   fun ge(that: CCounter[A] box): Bool => value().ge(that.value())
 
-  new ref from_tokens(that: TokenIterator[CCounterToken[A]])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    _kernel = _kernel.from_tokens(that)?
+    _kernel.from_tokens(that)?
 
-  fun each_token(fn: {ref(Token[CCounterToken[A]])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    _kernel.each_token(fn)
-
-  fun to_tokens(): TokenIterator[CCounterToken[A]] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    _kernel.to_tokens()
-
-type CCounterToken[A] is (ID | U32 | A)
+    _kernel.each_token(tokens)

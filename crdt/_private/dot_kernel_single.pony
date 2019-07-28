@@ -1,7 +1,7 @@
 use ".."
 use "collections"
 
-class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
+class ref DotKernelSingle[A: Any val] is Replicated
   """
   This class is a reusable abstraction meant for use inside other CRDTs.
 
@@ -12,33 +12,46 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
 
   See the docs for the DotKernel class for more information.
   """
-  let _id: ID
-  embed _ctx: _DotContext
-  embed _map: Map[ID, (U32, A)]
+  let _ctx: DotContext
+  embed _map: Map[ID, (U64, A)]
 
   new create(id': ID) =>
     """
     Instantiate under the given unique replica id.
-    
+
     It will only be possible to add dotted values under this replica id,
     aside from converging it as external data with the `converge` function.
     """
-    _id  = id'
-    _ctx = _ctx.create()
+    _ctx = _ctx.create(id')
     _map = _map.create()
 
-  fun id(): ID =>
+  new create_in(ctx': DotContext) =>
     """
-    Return the replica id used to instantiate this kernel.
+    Instantiate under the given DotContext.
     """
-    _id
+    _ctx = ctx'
+    _map = _map.create()
+
+  fun context(): this->DotContext =>
+    """
+    Get the underlying DotContext.
+    """
+    _ctx
+
+  fun is_empty(): Bool =>
+    """
+    Return true if there are no values ever recorded from any replica.
+    This is true at creation, after calling the clear method,
+    or after a converge that results in all values being cleared.
+    """
+    _map.size() == 0
 
   fun values(): Iterator[A]^ =>
     """
     Return an iterator over the active values in this kernel.
     """
     object is Iterator[A]
-      let iter: Iterator[(U32, A)] = _map.values()
+      let iter: Iterator[(U64, A)] = _map.values()
       fun ref has_next(): Bool => iter.has_next()
       fun ref next(): A? => iter.next()?._2
     end
@@ -52,7 +65,7 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     The next-sequence-numbered dot for this replica will be used, so that the
     new value has a happens-after causal relationship with the previous value.
     """
-    let dot = _ctx.next_dot(_id)
+    let dot = _ctx.next_dot()
     _map(dot._1) = (dot._2, value')
     delta'._map(dot._1) = (dot._2, value')
     delta'._ctx.set(dot)
@@ -64,9 +77,12 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     delta': D = recover DotKernelSingle[A](0) end)
   : D^ =>
     """
-    Update the 
+    Update the value for this replica in the map of active values,
+    using a function to define the strategy for updating an existing value.
+    The next-sequence-numbered dot for this replica will be used, so that the
+    new value has a happens-after causal relationship with the previous value.
     """
-    let value = try fn'(_map(_id)?._2, value') else value' end
+    let value = try fn'(_map(_ctx.id())?._2, value') else value' end
     update(value, delta')
 
   fun ref remove_value[
@@ -155,7 +171,42 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
 
     // Finally, catch up on the entire history of dots that the other kernel
     // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
     if _ctx.converge(that._ctx) then
+      changed = true
+    end
+
+    changed
+
+  fun ref converge_empty_in(ctx': DotContext box): Bool =>
+    """
+    Optimize for the special case of converging from a peer with an empty map,
+    taking only their DotContext as an argument for resolving disagreements.
+    """
+    var changed = false
+
+    // Active values that now exist only in our kernel but were already seen
+    // by that kernel's history of dots should be removed from our map.
+    let removables: Array[ID] = []
+    for (id', (n, value)) in _map.pairs() do
+      let dot = (id', n)
+      if ctx'.contains(dot) then
+        removables.push(id')
+        changed = true
+      end
+    end
+    for id' in removables.values() do try _map.remove(id')? end end
+
+    // Finally, catch up on the entire history of dots that the other kernel
+    // knows about, Because we're now caught up on the fruits of that history.
+    // It's important that we do this as the last step; both this local logic,
+    // and some broader assumptions regarding sharing contexts rely on the
+    // fact that the context is converged after the data.
+    // Note that this call will be a no-op when the context is shared.
+    if _ctx.converge(ctx') then
       changed = true
     end
 
@@ -184,47 +235,37 @@ class ref DotKernelSingle[A: Any #share] is Convergent[DotKernelSingle[A]]
     out.append(_ctx.string())
     out
 
-  new ref from_tokens(that: TokenIterator[(ID | U32 | A)])? =>
+  fun ref from_tokens(that: TokensIterator)? =>
     """
     Deserialize an instance of this data structure from a stream of tokens.
     """
-    if that.next_count()? != 3 then error end
+    if that.next[USize]()? != 2 then error end
 
-    _id = that.next[ID]()?
+    _ctx.from_tokens(that)?
 
-    _ctx = _ctx.from_tokens(Tokens[(ID | U32 | A)].subset[(ID | U32)](that))?
-
-    var count = that.next_count()?
+    var count = that.next[USize]()?
     if (count % 3) != 0 then error end
     count = count / 3
 
-    _map = _map.create(count)
+    // TODO: _map.reserve(count)
     while (count = count - 1) > 0 do
       _map.update(
         that.next[ID]()?,
-        (that.next[U32]()?, that.next[A]()?)
+        (that.next[U64]()?, that.next[A]()?)
       )
     end
 
-  fun each_token(fn: {ref(Token[(ID | U32 | A)])} ref) =>
+  fun ref each_token(tokens: Tokens) =>
     """
-    Call the given function for each token, serializing as a sequence of tokens.
+    Serialize the data structure, capturing each token into the given Tokens.
     """
-    fn(USize(3))
+    tokens.push(USize(2))
 
-    fn(_id)
+    _ctx.each_token(tokens)
 
-    _ctx.each_token(fn)
-
-    fn(_map.size() * 3)
+    tokens.push(_map.size() * 3)
     for (i, (n, v)) in _map.pairs() do
-      fn(i)
-      fn(n)
-      fn(v)
+      tokens.push(i)
+      tokens.push(n)
+      tokens.push(v)
     end
-
-  fun to_tokens(): TokenIterator[(ID | U32 | A)] =>
-    """
-    Serialize an instance of this data structure to a stream of tokens.
-    """
-    Tokens[(ID | U32 | A)].to_tokens(this)
