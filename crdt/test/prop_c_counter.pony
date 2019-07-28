@@ -119,15 +119,10 @@ class CCounterIncDecProperty is CCounterProperty
               Generators.usize(0, num_replicas-1),
               Generators.u64().flat_map[_CCounterCmd]({
                 (u) =>
-                  try
-                    Generators.one_of[_CCounterCmd]([
-                       _CCounterCmd(u, _INC)
-                       _CCounterCmd(u, _DEC)
-                    ])?
-                  else
-                    // shouldn't happen
-                    Generators.unit[_CCounterCmd](_CCounterCmd(u, _INC))
-                  end
+                  Generators.one_of[_CCounterCmd]([
+                     _CCounterCmd(u, _INC)
+                     _CCounterCmd(u, _DEC)
+                  ])
               }),
               {(replica, cmd) => _CmdOnReplica(replica, cmd) }
           )
