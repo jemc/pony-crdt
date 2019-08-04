@@ -13,4 +13,4 @@ This package provides CRDTs which may be freely converged using either the full-
 This implementation of ẟ-CRDTs is inspired and informed by the following prior work:
 * [This 2016 academic paper](https://arxiv.org/abs/1603.01529) (***Delta State Replicated Data Types*** – *Almeida et al. 2016*).
 * [This informal summary of the paper](https://blog.acolyer.org/2016/04/25/delta-state-replicated-data-types/).
-* [This C++ reference implementation of the paper](https://blog.acolyer.org/2016/04/25/delta-state-replicated-data-types/).
+* [This C++ reference implementation of the paper](https://github.com/CBaquero/delta-enabled-crdts).
